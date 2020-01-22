@@ -9,7 +9,7 @@ const float mps = 0.153; // meters per second motor time
 const float dps = 70; // degrees per second motor time
 int led_phase = 0;
 const int FOLLOW_TURN = 40;
-const int lsense_pins[4] = {9,10,11,8};
+const int lsense_pins[4] = {12,13,5,8};
 const int llights[4] = {3,2,1,4};
 const int START_SWITCH = 7;
 int sum(int arr[], int l) {
@@ -87,9 +87,10 @@ void setup() {
 }
 
 void loop() {
-  while (!digitalRead(START_SWITCH)) {
+  while (digitalRead(START_SWITCH)) {
     get_line_pos();
   }
-  Serial.println("GOING!");
+  //Serial.println("GOING!");
   line_follow(0,100);
+  //straight(1);
 }
