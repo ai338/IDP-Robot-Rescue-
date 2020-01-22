@@ -4,81 +4,89 @@
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
-const int MOTOR_SPEED = 128;
-const float mps = 1; // meters per second motor time
-const float dps = 90; // degrees per second motor time
-int led_phase=0;
+const int MOTOR_SPEED = 200;
+const float mps = 0.153; // meters per second motor time
+const float dps = 70; // degrees per second motor time
+int led_phase = 0;
 const int FOLLOW_TURN = 20;
-const int lsense_pins[3] = {0,0,0};
-int sum(int arr[]){
-  int s=0;
-  for (int x=0;x<sizeof(arr)/sizeof(int);x++){
-    s+=arr[x];
+const int lsense_pins[3] = {0, 0, 0};
+const int START_SWITCH = 8;
+int sum(int arr[], int l) {
+  int s = 0;
+  for (int x = 0; x < l; x++) {
+    s += arr[x];
   }
   return s;
 }
-void motor(int l, int r, int t){
+void motor(int l, int r, int t) {
   left_motor->setSpeed(abs(l));
   right_motor->setSpeed(abs(r));
-  left_motor->run(l<0?BACKWARD:FORWARD);
-  right_motor->run(r<0?BACKWARD:FORWARD);
-  for (int ds=0;ds<t;ds++){
+  left_motor->run(l < 0 ? BACKWARD : FORWARD);
+  right_motor->run(r < 0 ? BACKWARD : FORWARD);
+  for (int ds = 0; ds < t; ds++) {
     led_phase++;
-    led_phase%=10;
-    digitalWrite(LED_BUILTIN,led_phase<5?LOW:HIGH);
+    led_phase %= 10;
+    digitalWrite(LED_BUILTIN, led_phase < 5 ? LOW : HIGH);
     delay(100);
   }
   left_motor->setSpeed(0);
   right_motor->setSpeed(0);
 }
-void turn(int bias, int t){
-  if (bias<0){
-    motor(MOTOR_SPEED+bias,MOTOR_SPEED,t);
-  }else{
-    motor(MOTOR_SPEED,MOTOR_SPEED-bias,t);
+void turn(int bias, int t) {
+  if (bias < 0) {
+    motor(MOTOR_SPEED + bias, MOTOR_SPEED, t);
+  } else {
+    motor(MOTOR_SPEED, MOTOR_SPEED - bias, t);
   }
 }
-void straight(float m){
-  motor(MOTOR_SPEED,MOTOR_SPEED,m/mps*10);
+void straight(float m) {
+  motor(MOTOR_SPEED, MOTOR_SPEED, m / mps * 10);
 }
-void spin(float degrees){
-  int sign=degrees<0?-1:1;
-  motor(MOTOR_SPEED*sign,MOTOR_SPEED*(1-sign),degrees/dps*10);
+void spin(float degrees) {
+  int sign = degrees < 0 ? -1 : 1;
+  motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, degrees / dps * 10);
 }
-int get_line_pos(){
+int get_line_pos() {
   int results[3];
-  for (int l=0;l<3;l++){
-    results[l]=digitalRead(lsense_pins[l]);
+  for (int l = 0; l < 3; l++) {
+    results[l] = digitalRead(lsense_pins[l]);
   }
-  if (sum(results)>1){
+  if (sum(results,3) > 1) {
     return 2;
-  }else if (results[0]){
+  } else if (results[0]) {
     return -1;
-  }else if (results[1]){
+  } else if (results[1]) {
     return 0;
   }
   return 1;
 }
-void line_follow(int bias, int follow_time){
-  for (int t=0;t<follow_time;t++){
+void line_follow(int bias, int follow_time) {
+  for (int t = 0; t < follow_time; t++) {
     int result = get_line_pos();
-    if (result==2){
-      turn(bias,1);
-    }else{
-      turn(FOLLOW_TURN*result,1);
+    if (result == 2) {
+      turn(bias, 1);
+    } else {
+      turn(FOLLOW_TURN * result, 1);
     }
   }
 }
 void setup() {
+  Serial.begin(9600);
   AFMS.begin();
   // change to actual LED at some point :P
   pinMode(LED_BUILTIN, OUTPUT);
-  for (int l=0;l<3;l++){
+  for (int l = 0; l < 3; l++) {
     pinMode(lsense_pins[l], INPUT);
   }
+  pinMode(START_SWITCH, INPUT);
 }
 
 void loop() {
+  while (!digitalRead(START_SWITCH)) {}
+  Serial.println("GOING!");
+  /*for (int i = 0; i < 4; i++) {
+    straight(0.3);
+    spin(90);
+  }*/
   straight(1);
-  spin(90);
 }
