@@ -8,9 +8,10 @@ const int MOTOR_SPEED = 200;
 const float mps = 0.153; // meters per second motor time
 const float dps = 70; // degrees per second motor time
 int led_phase = 0;
-const int FOLLOW_TURN = 20;
-const int lsense_pins[3] = {0, 0, 0};
-const int START_SWITCH = 8;
+const int FOLLOW_TURN = 40;
+const int lsense_pins[4] = {9,10,11,8};
+const int llights[4] = {3,2,1,4};
+const int START_SWITCH = 7;
 int sum(int arr[], int l) {
   int s = 0;
   for (int x = 0; x < l; x++) {
@@ -50,6 +51,7 @@ int get_line_pos() {
   int results[3];
   for (int l = 0; l < 3; l++) {
     results[l] = digitalRead(lsense_pins[l]);
+    digitalWrite(llights[l],results[l]);
   }
   if (sum(results,3) > 1) {
     return 2;
@@ -75,18 +77,19 @@ void setup() {
   AFMS.begin();
   // change to actual LED at some point :P
   pinMode(LED_BUILTIN, OUTPUT);
-  for (int l = 0; l < 3; l++) {
+  for (int l = 0; l < 4; l++) {
     pinMode(lsense_pins[l], INPUT);
+  }
+  for (int l = 0; l < 4; l++) {
+    pinMode(llights[l], OUTPUT);
   }
   pinMode(START_SWITCH, INPUT);
 }
 
 void loop() {
-  while (!digitalRead(START_SWITCH)) {}
+  while (!digitalRead(START_SWITCH)) {
+    get_line_pos();
+  }
   Serial.println("GOING!");
-  /*for (int i = 0; i < 4; i++) {
-    straight(0.3);
-    spin(90);
-  }*/
-  straight(1);
+  line_follow(0,100);
 }
