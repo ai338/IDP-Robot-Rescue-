@@ -68,14 +68,20 @@ void turn(int bias, int t) {
   }
 }
 void straight(float m) {
+<<<<<<< HEAD
   //go forward for m meters
   motor(MOTOR_SPEED, MOTOR_SPEED, m / mps * 10);
   prev_distance = m; 
+=======
+  //go forward/backward for m meters
+  int sign = m < 0 ? -1 : 1;
+  motor(MOTOR_SPEED*sign, MOTOR_SPEED*sign, abs(m) / mps * 10);
+>>>>>>> 5796e0c91733b60a5e9b5bb099919a88aa778e9b
 }
-void spin(float degrees) {
+void spin(float deg) {
   //turn on the spot
-  int sign = degrees < 0 ? -1 : 1;
-  motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, degrees / dps * 10);
+  int sign = deg < 0 ? -1 : 1;
+  motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, deg / dps * 10);
 }
 int get_line_pos() {
   //get line position, returns -1 to 1 for single sensor, 2 for multiple sensors and -2 for no sensors
