@@ -1,3 +1,4 @@
+
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
@@ -15,6 +16,9 @@ const int START_SWITCH = 12; // switch to start robot
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 12; // ultrasound stuff
 const int echoPin = 13; // yeah
+int prev_distance = 0;
+
+
 int ultrasound() {
   long duration, distance;
   digitalWrite(trigPin, LOW);
@@ -119,6 +123,24 @@ void line_follow(int bias, int follow_time) {
       last_result = FOLLOW_TURN * result;
     }
   }
+}
+
+void find_line()
+{
+  //TODO
+}
+
+void return_back(float distance, int deg, int bias, int follow_time)
+{
+  spin(180);
+  straight(prev_distance);
+  spin(deg);
+
+
+  find_line();
+  line_follow(bias, follow_time);
+
+
 }
 void setup() {
   Serial.begin(9600);
