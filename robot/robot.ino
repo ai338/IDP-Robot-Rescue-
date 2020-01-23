@@ -66,12 +66,25 @@ void turn(int bias, int t) {
 void straight(float m) {
   //go forward/backward for m meters
   int sign = m < 0 ? -1 : 1;
-  motor(MOTOR_SPEED*sign, MOTOR_SPEED*sign, abs(m) / mps * 10);
+  motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, abs(m) / mps * 10);
 }
 void spin(float deg) {
   //turn on the spot
   int sign = deg < 0 ? -1 : 1;
   motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, deg / dps * 10);
+}
+void spin_until(int pin, int deg_max) {
+  //spin until we get a signal from pin or reach deg_max
+  float dpds = dps / 10;
+  float total = 0;
+  for (int i = 0; i < deg_max / dpds; i++) {
+    if (digitalRead(pin)) {
+    return total;
+  }
+  spin(dpds);
+  total += dpds;
+}
+return total;
 }
 int get_line_pos() {
   //get line position, returns -1 to 1 for single sensor, 2 for multiple sensors and -2 for no sensors
