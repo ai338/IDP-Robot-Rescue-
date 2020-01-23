@@ -9,10 +9,29 @@ const float mps = 0.153; // meters per second motor time
 const float dps = 70; // degrees per second motor time
 int led_phase = 0; //keep track of LED state
 const int FOLLOW_TURN = 40; //default turning power subtracted from inside wheel
-const int lsense_pins[4] = {A0,A1,A2,A3}; //line sensor pins
-const int llights[4] = {2,3,4,5}; //debug LEDs for line sensor
+const int lsense_pins[4] = {A0, A1, A2, A3}; //line sensor pins
+const int llights[4] = {2, 3, 4, 5}; //debug LEDs for line sensor
 const int START_SWITCH = 12; // switch to start robot
-int last_result=0; //keep track of last turn to return robot to line
+int last_result = 0; //keep track of last turn to return robot to line
+const int trigPin = 12; // ultrasound stuff
+const int echoPin = 13; // yeah
+int ultrasound() {
+  long duration, distance;
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = (duration / 2) / 29.1;
+  if (distance >= 200 || distance <= 0) {
+    Serial.println("Out of range");
+    return -1;
+  }
+  else {
+    return distance;
+  }
+}
 int sum(int arr[], int l) {
   //add numbers in an array of length l
   int s = 0;
@@ -59,15 +78,15 @@ int get_line_pos() {
   for (int l = 0; l < 3; l++) {
     results[l] = digitalRead(lsense_pins[l]);
     //debug leds
-    digitalWrite(llights[l],results[l]);
+    digitalWrite(llights[l], results[l]);
   }
-  if (sum(results,3) > 1) {
+  if (sum(results, 3) > 1) {
     return 2;
   } else if (results[0]) {
     return -1;
   } else if (results[1]) {
     return 0;
-  }else if (results[2]){
+  } else if (results[2]) {
     return 1;
   }
   return -2;
@@ -78,12 +97,12 @@ void line_follow(int bias, int follow_time) {
     int result = get_line_pos();
     if (result == 2) {
       turn(bias, 1);
-      last_result=bias;
-    }else if (result==-2){
-      turn(last_result,1);
+      last_result = bias;
+    } else if (result == -2) {
+      turn(last_result, 1);
     } else {
       turn(FOLLOW_TURN * result, 1);
-      last_result=FOLLOW_TURN*result;
+      last_result = FOLLOW_TURN * result;
     }
   }
 }
@@ -99,6 +118,9 @@ void setup() {
     pinMode(llights[l], OUTPUT);
   }
   pinMode(START_SWITCH, INPUT);
+  //uncomment when ultrasound ready
+  /*pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);*/
 }
 
 void loop() {
@@ -106,5 +128,5 @@ void loop() {
     get_line_pos();
   }
   //Serial.println("GOING!");
-  line_follow(0,100);
+  line_follow(0, 100);
 }
