@@ -16,7 +16,7 @@ const int START_SWITCH = 12; // switch to start robot
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 12; // ultrasound stuff
 const int echoPin = 13; // yeah
-int prev_distance = 0;
+float prev_distance = 0;
 
 
 int ultrasound() {
@@ -71,6 +71,7 @@ void straight(float m) {
   //go forward/backward for m meters
   int sign = m < 0 ? -1 : 1;
   motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, abs(m) / mps * 10);
+  prev_distance+=m;
 }
 void spin(float deg) {
   //turn on the spot
