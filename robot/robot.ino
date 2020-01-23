@@ -4,15 +4,15 @@
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
-const int MOTOR_SPEED = 200;
+const int MOTOR_SPEED = 200; // default motor speed, don't change PLEASE
 const float mps = 0.153; // meters per second motor time
 const float dps = 70; // degrees per second motor time
-int led_phase = 0;
-const int FOLLOW_TURN = 40;
-const int lsense_pins[4] = {A0,A1,A2,A3};
-const int llights[4] = {2,3,4,5};
-const int START_SWITCH = 12;
-int last_result=0;
+int led_phase = 0; //keep track of LED state
+const int FOLLOW_TURN = 40; //default turning power subtracted from inside wheel
+const int lsense_pins[4] = {A0,A1,A2,A3}; //line sensor pins
+const int llights[4] = {2,3,4,5}; //debug LEDs for line sensor
+const int START_SWITCH = 12; // switch to start robot
+int last_result=0; //keep track of last turn to return robot to line
 int sum(int arr[], int l) {
   //add numbers in an array of length l
   int s = 0;
