@@ -10,8 +10,8 @@ const float mps = 0.153; // meters per second motor time
 const float dps = 70; // degrees per second motor time
 int led_phase = 0; //keep track of LED state
 const int FOLLOW_TURN = 40; //default turning power subtracted from inside wheel
-const int lsense_pins[4] = {A0, A1, A2, A3}; //line sensor pins
-const int llights[4] = {2, 3, 4, 5}; //debug LEDs for line sensor
+const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
+const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
 const int START_SWITCH = 12; // switch to start robot
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 12; // ultrasound stuff
@@ -94,10 +94,13 @@ float spin_until(int pin, int deg_max) {
 int get_line_pos() {
   //get line position, returns -1 to 1 for single sensor, 2 for multiple sensors and -2 for no sensors
   int results[3];
-  for (int l = 0; l < 3; l++) {
-    results[l] = digitalRead(lsense_pins[l]);
+  for (int l = 0; l < 4; l++) {
+    int r=digitalRead(lsense_pins[l]);
+    if (l<3){
+      results[l] = r;
+    }
     //debug leds
-    digitalWrite(llights[l], results[l]);
+    digitalWrite(llights[l], r);
   }
   if (sum(results, 3) > 1) {
     return 2;
