@@ -2,7 +2,6 @@
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
 const float SLOWDOWN = 0.5; //slowdown for testing
