@@ -55,7 +55,7 @@ void spin(float deg) {
   motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, deg / dps * 10);
 }
 
-void make_sqare(float m)
+void make_square(float m)
 {
   straight(m); 
   spin(90); 
@@ -90,5 +90,5 @@ void test_right_motor_backwards(int t)
 void loop() {
   while (digitalRead(START_SWITCH))
   {}
-  make_sqare(0.4); 
+  make_square(0.4); 
 }
