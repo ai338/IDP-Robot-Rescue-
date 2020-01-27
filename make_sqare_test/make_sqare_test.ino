@@ -5,8 +5,10 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
-
-const int MOTOR_SPEED = 200;
+const float SLOWDOWN = 0.5; //slowdown for testing
+const int MOTOR_SPEED = 200 * SLOWDOWN; // default motor speed, don't change PLEASE
+const float mps = 0.153 * SLOWDOWN; // meters per second motor time
+const float dps = 65 * SLOWDOWN; // degrees per second motor time
 int led_phase = 0;
 const int START_SWITCH = 12;
 int t = 300;
@@ -47,7 +49,6 @@ void straight(float m) {
   //go forward/backward for m meters
   int sign = m < 0 ? -1 : 1;
   motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, abs(m) / mps * 10);
-  prev_distance+=m;
 }
 void spin(float deg) {
   //turn on the spot
