@@ -9,7 +9,7 @@ Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
 const int MOTOR_SPEED = 200;
 int led_phase = 0;
 const int START_SWITCH = 12;
-int t = 300;
+int t = 30;
 
 void setup() {
   Serial.begin(9600);

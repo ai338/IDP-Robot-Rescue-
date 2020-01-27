@@ -5,11 +5,12 @@
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
-const int MOTOR_SPEED = 200; // default motor speed, don't change PLEASE
-const float mps = 0.153; // meters per second motor time
-const float dps = 70; // degrees per second motor time
+const float SLOWDOWN = 0.5; //slowdown for testing
+const int MOTOR_SPEED = 200 * SLOWDOWN; // default motor speed, don't change PLEASE
+const float mps = 0.153 * SLOWDOWN; // meters per second motor time
+const float dps = 65 * SLOWDOWN; // degrees per second motor time
 int led_phase = 0; //keep track of LED state
-const int FOLLOW_TURN = 40; //default turning power subtracted from inside wheel
+const int FOLLOW_TURN = MOTOR_SPEED; //default turning power subtracted from inside wheel
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
 const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
 const int START_SWITCH = 12; // switch to start robot
@@ -71,7 +72,7 @@ void straight(float m) {
   //go forward/backward for m meters
   int sign = m < 0 ? -1 : 1;
   motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, abs(m) / mps * 10);
-  prev_distance+=m;
+  prev_distance += m;
 }
 void spin(float deg) {
   //turn on the spot
@@ -84,19 +85,44 @@ float spin_until(int pin, int deg_max) {
   float total = 0;
   for (int i = 0; i < deg_max / dpds; i++) {
     if (digitalRead(pin)) {
+      confirmatory_flash();
       return total;
     }
     spin(dpds);
     total += dpds;
   }
-  return total;
+  return deg_max;
+}
+float move_until(int pin, float dist_min, float dist_max) {
+  //straight until we get a signal from pin or reach dist_max
+  float mpds = mps / 10.0;
+  float total = 0;
+  for (int i = 0; i < dist_max / mpds; i++) {
+    if (digitalRead(pin) && total > dist_min) {
+      confirmatory_flash();
+      return total;
+    }
+    straight(mpds);
+    total += mpds;
+  }
+  return dist_max;
+}
+void confirmatory_flash() {
+  //debug purposes only
+  for (int i = 0; i < 4; i++) {
+    digitalWrite(llights[i], HIGH);
+  }
+  delay(10);
+  for (int i = 0; i < 4; i++) {
+    digitalWrite(llights[i], LOW);
+  }
 }
 int get_line_pos() {
   //get line position, returns -1 to 1 for single sensor, 2 for multiple sensors and -2 for no sensors
   int results[3];
   for (int l = 0; l < 4; l++) {
-    int r=digitalRead(lsense_pins[l]);
-    if (l<3){
+    int r = digitalRead(lsense_pins[l]);
+    if (l < 3) {
       results[l] = r;
     }
     //debug leds
@@ -113,7 +139,7 @@ int get_line_pos() {
   }
   return -2;
 }
-void line_follow(int bias, int follow_time) {
+void follow_line(int bias, int follow_time) {
   //follow line with turning bias when multiple sensors for follow_timex100ms
   for (int t = 0; t < follow_time; t++) {
     int result = get_line_pos();
@@ -123,28 +149,34 @@ void line_follow(int bias, int follow_time) {
     } else if (result == -2) {
       turn(last_result, 1);
     } else {
-      turn(FOLLOW_TURN * result, 1);
-      last_result = FOLLOW_TURN * result;
+      turn(FOLLOW_TURN * -result, 1);
+      last_result = FOLLOW_TURN * -result;
     }
   }
 }
 
-void find_line()
+bool find_line()
 {
-  //TODO
+  if (spin_until(lsense_pins[3], 360) != 360) {
+    spin(180);
+    if (move_until(lsense_pins[1], 0.12, 0.36) != 0.36) {
+      return true;
+    }
+  }
+  return false;
 }
 
-void return_back(float distance, int deg, int bias, int follow_time)
+bool return_back(float distance, int deg, int bias, int follow_time)
 {
   spin(180);
   straight(prev_distance);
   spin(deg);
 
-
-  find_line();
-  line_follow(bias, follow_time);
-
-
+  if (find_line()){
+    follow_line(bias, follow_time);
+    return true;
+  }
+  return false;
 }
 void setup() {
   Serial.begin(9600);
@@ -168,5 +200,7 @@ void loop() {
     get_line_pos();
   }
   //Serial.println("GOING!");
-  line_follow(0, 100);
+  if (find_line()) {
+    follow_line(0, 300);
+  }
 }
