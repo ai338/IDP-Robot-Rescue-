@@ -71,7 +71,7 @@ void turn(int bias, int t) {
 void straight(float m) {
   //go forward/backward for m meters
   int sign = m < 0 ? -1 : 1;
-  motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, abs(m) / mps * 10);
+  motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, fabs(m) / mps * 10);
   prev_distance += m;
 }
 void spin(float deg) {
@@ -200,6 +200,13 @@ void loop() {
     get_line_pos();
   }
   //Serial.println("GOING!");
+  follow_line(0,300);
+  int rturn = random(-90,90);
+  spin(rturn);
+  prev_distance=0;
+  straight(random(1,10)*0.1);
+  spin(180);
+  straight(prev_distance);
   if (find_line()) {
     follow_line(0, 300);
   }
