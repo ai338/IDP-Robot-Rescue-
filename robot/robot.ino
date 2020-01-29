@@ -2,6 +2,8 @@
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
+#include <Servo.h>             //Servo library
+Servo servo_test;        //initialize a servo object for the connected servo  
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
@@ -20,7 +22,7 @@ const int echoPin = 13; // yeah
 float prev_distance = 0;
 
 
-int ultrasound() {
+long ultrasound() {
   long duration, distance;
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
@@ -178,6 +180,30 @@ bool return_back(float distance, int deg, int bias, int follow_time)
   }
   return false;
 }
+
+void ungrip(int starting_angle)
+{
+  for (int angle = starting_angle; angle >= 1; angle-=5) //command to move from starting_angle to 0
+  {
+    servo_test.write(angle); // command to rotate the servo to the specified angle
+    delay(5); 
+  }
+
+  delay(1000); 
+}
+
+void grip(int finishing_angle)
+{
+  for (int angle = 0; angle <= finishing_angle; angle += 1) //command to move from 0 degrees to finishing_degrees
+  {
+    servo_test.write(angle);  // command to rotate the servo to the specified angle
+    delay(15); 
+  }
+
+  delay(1000); 
+}
+
+
 void setup() {
   Serial.begin(9600);
   AFMS.begin();
