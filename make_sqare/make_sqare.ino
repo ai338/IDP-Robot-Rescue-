@@ -1,20 +1,16 @@
-//#include <Wire.h>
+#include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
 
-const float SLOWDOWN = 0.5; //slowdown for testing
-const int MOTOR_SPEED = 200 * SLOWDOWN; // default motor speed, don't change PLEASE
-const float mps = 0.151 * SLOWDOWN; // meters per second motor time
-const float dps = 62 * SLOWDOWN; // degrees per second motor time
+const int MOTOR_SPEED = 200;
 int led_phase = 0;
 const int START_SWITCH = 12;
 int t = 300;
-float f_abs(float f){
-  return f<0?-f:f;
-}
+
 void setup() {
   Serial.begin(9600);
   AFMS.begin();
@@ -50,7 +46,8 @@ void turn(int bias, int t) {
 void straight(float m) {
   //go forward/backward for m meters
   int sign = m < 0 ? -1 : 1;
-  motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, f_abs(m) / mps * 10);
+  motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, abs(m) / mps * 10);
+  prev_distance+=m;
 }
 void spin(float deg) {
   //turn on the spot
@@ -58,7 +55,7 @@ void spin(float deg) {
   motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, deg / dps * 10);
 }
 
-void make_square(float m)
+void make_sqare(float m)
 {
   straight(m); 
   spin(90); 
@@ -93,7 +90,5 @@ void test_right_motor_backwards(int t)
 void loop() {
   while (digitalRead(START_SWITCH))
   {}
-
-  straight(0.3); 
-  
+  make_sqare(0.4); 
 }
