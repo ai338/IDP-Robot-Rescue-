@@ -17,20 +17,11 @@ const int START_SWITCH = 12; // switch to start robot
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 12; // ultrasound stuff
 const int echoPin = 13; // yeah
-const int IR_INPUT = A4;
 float prev_distance = 0;
 
-bool victim_detect(){
-  for (int i=0;i<10;i++){
-    if (analogRead(IR_INPUT)<1000){
-      return true;
-    }
-    delayMicroseconds(100);
-  }
-  return false;
-}
-float ultrasound() {
-  float duration, distance;
+
+int ultrasound() {
+  long duration, distance;
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -152,13 +143,13 @@ void follow_line(int bias, int follow_time) {
   //follow line with turning bias when multiple sensors for follow_timex100ms
   for (int t = 0; t < follow_time; t++) {
     int result = get_line_pos();
-    if (result == 2) {
+    if (result == 2) { // multiple sensors
       turn(bias, 1);
       last_result = bias;
-    } else if (result == -2) {
+    } else if (result == -2) { // no sensors
       turn(last_result, 1);
-    } else {
-      turn(FOLLOW_TURN * -result, 1);
+    } else { // single sensor turned on 
+      turn(FOLLOW_TURN * -result, 1); 
       last_result = FOLLOW_TURN * -result;
     }
   }
