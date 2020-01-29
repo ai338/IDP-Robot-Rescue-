@@ -9,15 +9,15 @@
   Original code improvements to the Ping sketch sourced from Trollmaker.com
   Some code and wiring inspired by http://en.wikiversity.org/wiki/User:Dstaub/robotcar
 */
-#define trigPin 12
-#define echoPin 13
+#define trigPin 22
+#define echoPin 24
 void setup() {
   Serial.begin (9600);
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 }
 void loop() {
-  long duration, distance;
+  float duration, distance;
   digitalWrite(trigPin, LOW); // Added this line
   delayMicroseconds(2); // Added this line
   digitalWrite(trigPin, HIGH);

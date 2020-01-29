@@ -7,8 +7,8 @@ Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
 const float SLOWDOWN = 0.5; //slowdown for testing
 const int MOTOR_SPEED = 200 * SLOWDOWN; // default motor speed, don't change PLEASE
-const float mps = 0.153 * SLOWDOWN; // meters per second motor time
-const float dps = 65 * SLOWDOWN; // degrees per second motor time
+const float mps = 0.151 * SLOWDOWN; // meters per second motor time
+const float dps = 62 * SLOWDOWN; // degrees per second motor time
 int led_phase = 0; //keep track of LED state
 const int FOLLOW_TURN = MOTOR_SPEED; //default turning power subtracted from inside wheel
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
@@ -71,7 +71,7 @@ void turn(int bias, int t) {
 void straight(float m) {
   //go forward/backward for m meters
   int sign = m < 0 ? -1 : 1;
-  motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, abs(m) / mps * 10);
+  motor(MOTOR_SPEED * sign, MOTOR_SPEED * sign, fabs(m) / mps * 10);
   prev_distance += m;
 }
 void spin(float deg) {
@@ -97,12 +97,12 @@ float move_until(int pin, float dist_min, float dist_max) {
   //straight until we get a signal from pin or reach dist_max
   float mpds = mps / 10.0;
   float total = 0;
-  for (int i = 0; i < dist_max / mpds; i++) {
-    if (digitalRead(pin) && total > dist_min) {
+  for (int i = 0; i < (dist_max / mpds); i++) {
+    if (digitalRead(pin) && (total > dist_min)) {
       confirmatory_flash();
       return total;
     }
-    straight(mpds);
+    motor(MOTOR_SPEED,MOTOR_SPEED,1);
     total += mpds;
   }
   return dist_max;
@@ -200,6 +200,13 @@ void loop() {
     get_line_pos();
   }
   //Serial.println("GOING!");
+  follow_line(0,300);
+  int rturn = random(-90,90);
+  spin(rturn);
+  prev_distance=0;
+  straight(random(1,10)*0.1);
+  spin(180);
+  straight(prev_distance);
   if (find_line()) {
     follow_line(0, 300);
   }
