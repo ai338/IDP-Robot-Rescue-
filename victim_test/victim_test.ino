@@ -1,7 +1,7 @@
-const int IR_INPUT = A0;
+const int IR_INPUT = 22;
 bool victim_detect(){
   for (int i=0;i<10;i++){
-    if (analogRead(IR_INPUT)<1000){
+    if (!digitalRead(IR_INPUT)){
       return true;
     }
     delayMicroseconds(100);
