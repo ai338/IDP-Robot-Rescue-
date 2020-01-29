@@ -193,6 +193,8 @@ void setup() {
   //uncomment when ultrasound ready
   /*pinMode(trigPin, OUTPUT);
     pinMode(echoPin, INPUT);*/
+  pinMode(IR_INPUT, INPUT);
+  randomSeed(analogRead(IR_INPUT));
 }
 
 void loop() {
