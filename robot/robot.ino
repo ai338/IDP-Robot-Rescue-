@@ -127,7 +127,7 @@ void confirmatory_flash() {
   }
 }
 int get_line_pos() {
-  //get line position, returns -1 to 1 for single sensor, 2 for multiple sensors and -2 for no sensors
+  //get line position, returns -1 to 1 for single sensor, sensor count for multiple sensors and -2 for no sensors
   int results[3];
   for (int l = 0; l < 4; l++) {
     int r = digitalRead(lsense_pins[l]);
@@ -137,7 +137,9 @@ int get_line_pos() {
     //debug leds
     digitalWrite(llights[l], r);
   }
-  if (sum(results, 3) > 1) {
+  if (sum(results, 3)==3) {
+    return 3;
+  }else if (sum(results, 2)==2){
     return 2;
   } else if (results[0]) {
     return -1;
@@ -149,10 +151,13 @@ int get_line_pos() {
   return -2;
 }
 void follow_line(int bias, int follow_time) {
-  //follow line with turning bias when multiple sensors for follow_timex100ms
-  for (int t = 0; t < follow_time; t++) {
+  //follow line with turning bias when multiple sensors for follow_timex100ms, and then stops following at T or at 2*follow_time
+  for (int t = 0; t < follow_time*2; t++) {
     int result = get_line_pos();
-    if (result == 2) {
+    if (result>1) {
+      if (result==3&&t>follow_time){
+        break;
+      }
       turn(bias, 1);
       last_result = bias;
     } else if (result == -2) {
@@ -211,7 +216,7 @@ void loop() {
     get_line_pos();
   }
   //Serial.println("GOING!");
-  follow_line(0,300);
+  follow_line(0,200);
   int rturn = random(-90,90);
   spin(rturn);
   prev_distance=0;
@@ -219,6 +224,6 @@ void loop() {
   spin(180);
   straight(prev_distance);
   if (find_line()) {
-    follow_line(0, 300);
+    follow_line(0, 200);
   }
 }
