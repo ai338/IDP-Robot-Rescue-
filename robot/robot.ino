@@ -17,11 +17,20 @@ const int START_SWITCH = 12; // switch to start robot
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 12; // ultrasound stuff
 const int echoPin = 13; // yeah
+const int IR_INPUT = A4;
 float prev_distance = 0;
 
-
-int ultrasound() {
-  long duration, distance;
+bool victim_detect(){
+  for (int i=0;i<10;i++){
+    if (analogRead(IR_INPUT)<1000){
+      return true;
+    }
+    delayMicroseconds(100);
+  }
+  return false;
+}
+float ultrasound() {
+  float duration, distance;
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
