@@ -20,9 +20,9 @@ const int echoPin = 13; // yeah
 const int IR_INPUT = A4;
 float prev_distance = 0;
 
-bool victim_detect(){
-  for (int i=0;i<10;i++){
-    if (analogRead(IR_INPUT)<1000){
+bool victim_detect() {
+  for (int i = 0; i < 10; i++) {
+    if (analogRead(IR_INPUT) < 1000) {
       return true;
     }
     delayMicroseconds(100);
@@ -111,7 +111,7 @@ float move_until(int pin, float dist_min, float dist_max) {
       confirmatory_flash();
       return total;
     }
-    motor(MOTOR_SPEED,MOTOR_SPEED,1);
+    motor(MOTOR_SPEED, MOTOR_SPEED, 1);
     total += mpds;
   }
   return dist_max;
@@ -137,9 +137,9 @@ int get_line_pos() {
     //debug leds
     digitalWrite(llights[l], r);
   }
-  if (sum(results, 3)==3) {
+  if (sum(results, 3) == 3) {
     return 3;
-  }else if (sum(results, 2)==2){
+  } else if (sum(results, 2) == 2) {
     return 2;
   } else if (results[0]) {
     return -1;
@@ -152,10 +152,10 @@ int get_line_pos() {
 }
 void follow_line(int bias, int follow_time) {
   //follow line with turning bias when multiple sensors for follow_timex100ms, and then stops following at T or at 2*follow_time
-  for (int t = 0; t < follow_time*2; t++) {
+  for (int t = 0; t < follow_time * 2; t++) {
     int result = get_line_pos();
-    if (result>1) {
-      if (result==3&&t>follow_time){
+    if (result > 1) {
+      if (result == 3 && t > follow_time) {
         break;
       }
       turn(bias, 1);
@@ -186,7 +186,7 @@ bool return_back(float distance, int deg, int bias, int follow_time)
   straight(prev_distance);
   spin(deg);
 
-  if (find_line()){
+  if (find_line()) {
     follow_line(bias, follow_time);
     return true;
   }
@@ -216,11 +216,11 @@ void loop() {
     get_line_pos();
   }
   //Serial.println("GOING!");
-  follow_line(0,200);
-  int rturn = random(-90,90);
+  follow_line(0, 200);
+  int rturn = random(-90, 90);
   spin(rturn);
-  prev_distance=0;
-  straight(random(1,10)*0.1);
+  prev_distance = 0;
+  straight(random(1, 10) * 0.1);
   spin(180);
   straight(prev_distance);
   if (find_line()) {
