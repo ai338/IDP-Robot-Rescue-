@@ -3,7 +3,8 @@
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 #include <Servo.h>             //Servo library
-Servo servo_test;        //initialize a servo object for the connected servo  
+Servo myservo_lift;  //initialize a servo object for the connected servo for up-down movement    
+Servo myservo_grab; //initialize a servo object for the connected servo for left-right movement (grab and ungrab)
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
@@ -20,24 +21,11 @@ int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 12; // ultrasound stuff
 const int echoPin = 13; // yeah
 float prev_distance = 0;
+int LIFT_ANGLE = 20; // check this
 
-<<<<<<< HEAD
 
 long ultrasound() {
   long duration, distance;
-=======
-bool victim_detect() {
-  for (int i = 0; i < 10; i++) {
-    if (analogRead(IR_INPUT) < 1000) {
-      return true;
-    }
-    delayMicroseconds(100);
-  }
-  return false;
-}
-float ultrasound() {
-  float duration, distance;
->>>>>>> c814257e15c2cfa2b8d7b2c8de02a7e257a69f16
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -118,7 +106,7 @@ float move_until(int pin, float dist_min, float dist_max) {
       confirmatory_flash();
       return total;
     }
-    motor(MOTOR_SPEED, MOTOR_SPEED, 1);
+    motor(MOTOR_SPEED,MOTOR_SPEED,1);
     total += mpds;
   }
   return dist_max;
@@ -134,7 +122,7 @@ void confirmatory_flash() {
   }
 }
 int get_line_pos() {
-  //get line position, returns -1 to 1 for single sensor, sensor count for multiple sensors and -2 for no sensors
+  //get line position, returns -1 to 1 for single sensor, 2 for multiple sensors and -2 for no sensors
   int results[3];
   for (int l = 0; l < 4; l++) {
     int r = digitalRead(lsense_pins[l]);
@@ -144,9 +132,7 @@ int get_line_pos() {
     //debug leds
     digitalWrite(llights[l], r);
   }
-  if (sum(results, 3) == 3) {
-    return 3;
-  } else if (sum(results, 2) == 2) {
+  if (sum(results, 3) > 1) {
     return 2;
   } else if (results[0]) {
     return -1;
@@ -158,17 +144,10 @@ int get_line_pos() {
   return -2;
 }
 void follow_line(int bias, int follow_time) {
-  //follow line with turning bias when multiple sensors for follow_timex100ms, and then stops following at T or at 2*follow_time
-  for (int t = 0; t < follow_time * 2; t++) {
+  //follow line with turning bias when multiple sensors for follow_timex100ms
+  for (int t = 0; t < follow_time; t++) {
     int result = get_line_pos();
-<<<<<<< HEAD
     if (result == 2) { // multiple sensors
-=======
-    if (result > 1) {
-      if (result == 3 && t > follow_time) {
-        break;
-      }
->>>>>>> c814257e15c2cfa2b8d7b2c8de02a7e257a69f16
       turn(bias, 1);
       last_result = bias;
     } else if (result == -2) { // no sensors
@@ -197,7 +176,7 @@ bool return_back(float distance, int deg, int bias, int follow_time)
   straight(prev_distance);
   spin(deg);
 
-  if (find_line()) {
+  if (find_line()){
     follow_line(bias, follow_time);
     return true;
   }
@@ -208,7 +187,7 @@ void ungrip(int starting_angle)
 {
   for (int angle = starting_angle; angle >= 1; angle-=5) //command to move from starting_angle to 0
   {
-    servo_test.write(angle); // command to rotate the servo to the specified angle
+    myservo_grab.write(angle); // command to rotate the servo to the specified angle
     delay(5); 
   }
 
@@ -219,13 +198,46 @@ void grip(int finishing_angle)
 {
   for (int angle = 0; angle <= finishing_angle; angle += 1) //command to move from 0 degrees to finishing_degrees
   {
-    servo_test.write(angle);  // command to rotate the servo to the specified angle
+    myservo_grab.write(angle);  // command to rotate the servo to the specified angle
     delay(15); 
   }
 
   delay(1000); 
 }
 
+void lift_up(int lift_angle)
+{
+  for (int angle = 0; angle <= lift_angle; angle++) // command to move from 0 degrees to lift_angle
+  {
+    myservo_lift.write(angle); 
+    delay(15); 
+  }
+
+  delay(1000); 
+}
+
+void lift_down(int lift_angle)
+{
+  for (int angle = lift_angle; angle >= 0; angle--)
+  {
+    myservo_lift.write(angle); 
+    delay(15); 
+  }
+
+  delay(1000); 
+}
+
+void pick_robot()
+{
+  grip(90); 
+  lift_up(LIFT_ANGLE); 
+}
+
+void drop_robot()
+{
+  lift_down(LIFT_ANGLE); 
+  ungrip(90);
+}
 
 void setup() {
   Serial.begin(9600);
@@ -244,21 +256,24 @@ void setup() {
     pinMode(echoPin, INPUT);*/
   pinMode(IR_INPUT, INPUT);
   randomSeed(analogRead(IR_INPUT));
+
+  //set myservos 
 }
+
 
 void loop() {
   while (digitalRead(START_SWITCH)) {
     get_line_pos();
   }
   //Serial.println("GOING!");
-  follow_line(0, 200);
-  int rturn = random(-90, 90);
+  follow_line(0,300);
+  int rturn = random(-90,90);
   spin(rturn);
-  prev_distance = 0;
-  straight(random(1, 10) * 0.1);
+  prev_distance=0;
+  straight(random(1,10)*0.1);
   spin(180);
   straight(prev_distance);
   if (find_line()) {
-    follow_line(0, 200);
+    follow_line(0, 300);
   }
 }
