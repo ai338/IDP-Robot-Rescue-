@@ -13,7 +13,7 @@ int led_phase = 0; //keep track of LED state
 const int FOLLOW_TURN = MOTOR_SPEED; //default turning power subtracted from inside wheel
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
 const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
-const int START_SWITCH = 12; // switch to start robot
+const int START_SWITCH = 6; // switch to start robot
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 12; // ultrasound stuff
 const int echoPin = 13; // yeah
@@ -97,17 +97,18 @@ float spin_until(int pin, int deg_max) {
       confirmatory_flash();
       return total;
     }
-    spin(dpds);
+    motor(MOTOR_SPEED, -MOTOR_SPEED, 1);
     total += dpds;
   }
   return deg_max;
 }
 float move_until(int pin, float dist_min, float dist_max) {
-  //straight until we get a signal from pin or reach dist_max
+  //straight until we get a signal from any of the pin or reach dist_max
+  //if pin -1 wait for ANY front line sensor
   float mpds = mps / 10.0;
   float total = 0;
   for (int i = 0; i < (dist_max / mpds); i++) {
-    if (digitalRead(pin) && (total > dist_min)) {
+    if ((pin==-1?get_line_pos()!=-2:digitalRead(pin)) && (total > dist_min)) {
       confirmatory_flash();
       return total;
     }
@@ -171,7 +172,7 @@ void follow_line(int bias, int follow_time) {
 
 bool find_line()
 {
-  if (spin_until(lsense_pins[3], 360) != 360) {
+  if (spin_until(-1, 360) != 360) {
     spin(180);
     if (move_until(lsense_pins[1], 0.12, 0.36) != 0.36) {
       return true;
@@ -217,10 +218,11 @@ void loop() {
   }
   //Serial.println("GOING!");
   follow_line(0, 200);
+  straight(0.2);
   int rturn = random(-90, 90);
   spin(rturn);
   prev_distance = 0;
-  straight(random(1, 10) * 0.1);
+  straight(random(2, 5) * 0.1);
   spin(180);
   straight(prev_distance);
   if (find_line()) {
