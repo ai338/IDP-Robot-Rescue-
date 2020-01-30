@@ -5,7 +5,7 @@
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
-const float SLOWDOWN = 0.5; //slowdown for testing
+const float SLOWDOWN = 0.6; //slowdown for testing
 const int MOTOR_SPEED = 200 * SLOWDOWN; // default motor speed, don't change PLEASE
 const float mps = 0.151 * SLOWDOWN; // meters per second motor time
 const float dps = 62 * SLOWDOWN; // degrees per second motor time
@@ -17,12 +17,12 @@ const int START_SWITCH = 6; // switch to start robot
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 12; // ultrasound stuff
 const int echoPin = 13; // yeah
-const int IR_INPUT = A4;
+const int IR_INPUT = 8;
 float prev_distance = 0;
 
 bool victim_detect() {
   for (int i = 0; i < 10; i++) {
-    if (analogRead(IR_INPUT) < 1000) {
+    if (!digitalRead(IR_INPUT)) {
       return true;
     }
     delayMicroseconds(100);
@@ -86,7 +86,7 @@ void straight(float m) {
 void spin(float deg) {
   //turn on the spot
   int sign = deg < 0 ? -1 : 1;
-  motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, deg / dps * 10);
+  motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, fabs(deg) / dps * 10);
 }
 float spin_until(int pin, int deg_max) {
   //spin until we get a signal from pin or reach deg_max
@@ -102,13 +102,28 @@ float spin_until(int pin, int deg_max) {
   }
   return deg_max;
 }
+float spin_scan(int deg_max, float slowdown) {
+  //spin slower until we get reading from a victim
+  //spin until we get a signal from pin or reach deg_max
+  float dpds = dps / 10 / slowdown;
+  float total = 0;
+  for (int i = 0; i < deg_max / dpds; i++) {
+    if (victim_detect()) {
+      confirmatory_flash();
+      return total;
+    }
+    motor(MOTOR_SPEED * slowdown, -MOTOR_SPEED * slowdown, 1);
+    total += dpds;
+  }
+  return deg_max;
+}
 float move_until(int pin, float dist_min, float dist_max) {
   //straight until we get a signal from any of the pin or reach dist_max
   //if pin -1 wait for ANY front line sensor
   float mpds = mps / 10.0;
   float total = 0;
   for (int i = 0; i < (dist_max / mpds); i++) {
-    if ((pin==-1?get_line_pos()!=-2:digitalRead(pin)) && (total > dist_min)) {
+    if ((pin == -1 ? get_line_pos() != -2 : digitalRead(pin)) && (total > dist_min)) {
       confirmatory_flash();
       return total;
     }
@@ -152,8 +167,8 @@ int get_line_pos() {
   return -2;
 }
 void follow_line(int bias, int follow_time) {
-  //follow line with turning bias when multiple sensors for follow_timex100ms, and then stops following at T or at 2*follow_time
-  for (int t = 0; t < follow_time * 2; t++) {
+  //follow line with turning bias when multiple sensors for follow_timex100ms, and then stops following at T or at 3*follow_time
+  for (int t = 0; t < follow_time * 3; t++) {
     int result = get_line_pos();
     if (result > 1) {
       if (result == 3 && t > follow_time) {
@@ -172,9 +187,9 @@ void follow_line(int bias, int follow_time) {
 
 bool find_line()
 {
-  if (spin_until(-1, 360) != 360) {
+  if (spin_until(lsense_pins[3], 360) != 360) {
     spin(180);
-    if (move_until(lsense_pins[1], 0.12, 0.36) != 0.36) {
+    if (move_until(-1, 0.12, 0.36) != 0.36) {
       return true;
     }
   }
@@ -217,15 +232,27 @@ void loop() {
     get_line_pos();
   }
   //Serial.println("GOING!");
-  follow_line(0, 200);
+  follow_line(0, 100 / SLOWDOWN);
+  confirmatory_flash();
   straight(0.2);
-  int rturn = random(-90, 90);
-  spin(rturn);
+  spin(90);
+  spin_scan(180, 0.5);
   prev_distance = 0;
   straight(random(2, 5) * 0.1);
   spin(180);
   straight(prev_distance);
   if (find_line()) {
-    follow_line(0, 200);
+    follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
+    straight(-0.2);
+    spin(-90);
+    spin_until(lsense_pins[1], 180);
+    follow_line(0, 80 / SLOWDOWN);
+    straight(0.2);
+    spin(180);
+    if (find_line()) {
+      follow_line(0, 100 / SLOWDOWN);
+      straight(0.4);
+    }
+
   }
 }
