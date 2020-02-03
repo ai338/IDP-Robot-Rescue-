@@ -275,7 +275,7 @@ void loop() {
     spin(180);
     if (find_line()) {
       follow_line(0, 100 / SLOWDOWN);
-      straight(0.4);
+      straight(0.35);
     }
 
   }
