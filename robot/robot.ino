@@ -14,10 +14,11 @@ const int FOLLOW_TURN = MOTOR_SPEED; //default turning power subtracted from ins
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
 const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
 const int START_SWITCH = 6; // switch to start robot
+const int FOV_CORRECTION=5;
 int last_result = 0; //keep track of last turn to return robot to line
-const int trigPin = 12; // ultrasound stuff
-const int echoPin = 13; // yeah
-const int IR_INPUT = 8;
+const int trigPin = 13; // ultrasound stuff
+const int echoPin = 12; // yeah
+const int IR_INPUT = 7;
 float prev_distance = 0;
 
 bool victim_detect() {
@@ -86,7 +87,12 @@ void straight(float m) {
 void spin(float deg) {
   //turn on the spot
   int sign = deg < 0 ? -1 : 1;
-  motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, fabs(deg) / dps * 10);
+  if (fabs(deg)<dps/10){
+    float slowdown=fabs(deg)/(dps/10);
+    motor(MOTOR_SPEED * -sign * slowdown, MOTOR_SPEED * sign * slowdown, 1);
+  }else{
+    motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, fabs(deg) / dps * 10);
+  }
 }
 float spin_until(int pin, int deg_max) {
   //spin until we get a signal from pin or reach deg_max
@@ -105,11 +111,12 @@ float spin_until(int pin, int deg_max) {
 float spin_scan(int deg_max, float slowdown) {
   //spin slower until we get reading from a victim
   //spin until we get a signal from pin or reach deg_max
-  float dpds = dps / 10 / slowdown;
+  float dpds = dps / 10 * slowdown;
   float total = 0;
   for (int i = 0; i < deg_max / dpds; i++) {
     if (victim_detect()) {
       confirmatory_flash();
+      spin(-FOV_CORRECTION);
       return total;
     }
     motor(MOTOR_SPEED * slowdown, -MOTOR_SPEED * slowdown, 1);
@@ -208,6 +215,20 @@ bool return_back(float distance, int deg, int bias, int follow_time)
   }
   return false;
 }
+void approach_victim(float max_d){
+  for (int i=0;i<max_d/(mps/10);i++){
+    straight(mps/10);
+    if (ultrasound()<5){
+      break;
+    }
+    if (!victim_detect()){
+      spin(10);
+      if (spin_scan(20,0.5)==20){
+        break;
+      }
+    }
+  }
+}
 void setup() {
   Serial.begin(9600);
   AFMS.begin();
@@ -230,29 +251,35 @@ void setup() {
 void loop() {
   while (digitalRead(START_SWITCH)) {
     get_line_pos();
+    delay(100);
+    Serial.println(ultrasound());
   }
-  //Serial.println("GOING!");
-  follow_line(0, 100 / SLOWDOWN);
-  confirmatory_flash();
-  straight(0.2);
-  spin(90);
-  spin_scan(180, 0.5);
-  prev_distance = 0;
-  straight(random(2, 5) * 0.1);
-  spin(180);
-  straight(prev_distance);
-  if (find_line()) {
-    follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
-    straight(-0.2);
-    spin(-90);
-    spin_until(lsense_pins[1], 180);
-    follow_line(0, 80 / SLOWDOWN);
-    straight(0.2);
-    spin(180);
-    if (find_line()) {
-      follow_line(0, 100 / SLOWDOWN);
-      straight(0.4);
-    }
-
+  if(spin_scan(180,0.5)!=180){
+    Serial.println("AYAAAAAAAAAAAAAA");
+    approach_victim(1);
   }
+  
+//  follow_line(0, 100 / SLOWDOWN);
+//  confirmatory_flash();
+//  straight(0.2);
+//  spin(90);
+//  spin_scan(180, 0.5);
+//  prev_distance = 0;
+//  straight(random(2, 5) * 0.1);
+//  spin(180);
+//  straight(prev_distance);
+//  if (find_line()) {
+//    follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
+//    straight(-0.2);
+//    spin(-90);
+//    spin_until(lsense_pins[1], 180);
+//    follow_line(0, 80 / SLOWDOWN);
+//    straight(0.2);
+//    spin(180);
+//    if (find_line()) {
+//      follow_line(0, 100 / SLOWDOWN);
+//      straight(0.4);
+//    }
+//
+//  }
 }

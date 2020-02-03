@@ -9,8 +9,8 @@
   Original code improvements to the Ping sketch sourced from Trollmaker.com
   Some code and wiring inspired by http://en.wikiversity.org/wiki/User:Dstaub/robotcar
 */
-#define trigPin 22
-#define echoPin 24
+#define trigPin 13
+#define echoPin 12
 void setup() {
   Serial.begin (9600);
   pinMode(trigPin, OUTPUT);
