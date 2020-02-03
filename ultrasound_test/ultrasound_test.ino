@@ -24,9 +24,9 @@ void loop() {
   // delayMicroseconds(1000); - Removed this line
   delayMicroseconds(10); // Added this line
   digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
+  duration = pulseIn(echoPin, HIGH, 3000);
   distance = (duration / 2) / 29.1;
-  if (distance >= 200 || distance <= 0) {
+  if (distance >= 50 || distance <= 0) {
     Serial.println("Out of range");
   }
   else {
