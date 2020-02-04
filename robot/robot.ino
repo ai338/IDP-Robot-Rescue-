@@ -5,10 +5,10 @@
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *left_motor = AFMS.getMotor(2);
 Adafruit_DCMotor *right_motor = AFMS.getMotor(1);
-const float SLOWDOWN = 0.6; //slowdown for testing
+const float SLOWDOWN = 0.8; //slowdown for testing
 const int MOTOR_SPEED = 200 * SLOWDOWN; // default motor speed, don't change PLEASE
 const float mps = 0.151 * SLOWDOWN; // meters per second motor time
-const float dps = 62 * SLOWDOWN; // degrees per second motor time
+const float dps = 65 * SLOWDOWN; // degrees per second motor time
 int led_phase = 0; //keep track of LED state
 const int FOLLOW_TURN = MOTOR_SPEED; //default turning power subtracted from inside wheel
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
