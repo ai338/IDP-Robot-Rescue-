@@ -15,8 +15,7 @@ const int FOLLOW_TURN = MOTOR_SPEED; //default turning power subtracted from ins
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
 const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
 const int START_SWITCH = 6; // switch to start robot
-const int FOV_CORRECTION = 5;
-
+const int FOV_CORRECTION=5;
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 13; // ultrasound stuff
 const int echoPin = 12; // yeah
@@ -43,11 +42,11 @@ float ultrasound() {
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH, 3000);
+  duration = pulseIn(echoPin, HIGH);
   distance = (duration / 2) / 29.1;
   if (distance >= 200 || distance <= 0) {
     Serial.println("Out of range");
-    return 999;
+    return -1;
   }
   else {
     return distance;
@@ -61,17 +60,17 @@ int sum(int arr[], int l) {
   }
   return s;
 }
-void motor(int l, int r, float t) {
+void motor(int l, int r, int t) {
   //set motors running for time t while flashing LED
   left_motor->setSpeed(abs(l));
   right_motor->setSpeed(abs(r));
   left_motor->run(l < 0 ? BACKWARD : FORWARD);
   right_motor->run(r < 0 ? BACKWARD : FORWARD);
-  for (int hds = 0; hds < t*2; hds++) {
+  for (int ds = 0; ds < t; ds++) {
     led_phase++;
-    led_phase %= 20;
-    digitalWrite(LED_BUILTIN, led_phase <10 ? LOW : HIGH);
-    delay(50);
+    led_phase %= 10;
+    digitalWrite(LED_BUILTIN, led_phase < 5 ? LOW : HIGH);
+    delay(100);
   }
   left_motor->setSpeed(0);
   right_motor->setSpeed(0);
@@ -93,23 +92,23 @@ void straight(float m) {
 void spin(float deg) {
   //turn on the spot
   int sign = deg < 0 ? -1 : 1;
-  if (fabs(deg) < dps / 10) {
-    float slowdown = fabs(deg) / (dps / 10);
+  if (fabs(deg)<dps/10){
+    float slowdown=fabs(deg)/(dps/10);
     motor(MOTOR_SPEED * -sign * slowdown, MOTOR_SPEED * sign * slowdown, 1);
-  } else {
+  }else{
     motor(MOTOR_SPEED * -sign, MOTOR_SPEED * sign, fabs(deg) / dps * 10);
   }
 }
 float spin_until(int pin, int deg_max) {
   //spin until we get a signal from pin or reach deg_max
-  float dpds = dps / 20;
+  float dpds = dps / 10;
   float total = 0;
   for (int i = 0; i < deg_max / dpds; i++) {
     if (digitalRead(pin)) {
       confirmatory_flash();
       return total;
     }
-    motor(MOTOR_SPEED, -MOTOR_SPEED, 0.5);
+    motor(MOTOR_SPEED, -MOTOR_SPEED, 1);
     total += dpds;
   }
   return deg_max;
@@ -117,7 +116,7 @@ float spin_until(int pin, int deg_max) {
 float spin_scan(int deg_max, float slowdown) {
   //spin slower until we get reading from a victim
   //spin until we get a signal from pin or reach deg_max
-  float dpds = dps / 20 * slowdown;
+  float dpds = dps / 10 * slowdown;
   float total = 0;
   for (int i = 0; i < deg_max / dpds; i++) {
     if (victim_detect()) {
@@ -125,7 +124,7 @@ float spin_scan(int deg_max, float slowdown) {
       spin(-FOV_CORRECTION);
       return total;
     }
-    motor(MOTOR_SPEED * slowdown, -MOTOR_SPEED * slowdown, 0.5);
+    motor(MOTOR_SPEED * slowdown, -MOTOR_SPEED * slowdown, 1);
     total += dpds;
   }
   return deg_max;
@@ -133,14 +132,14 @@ float spin_scan(int deg_max, float slowdown) {
 float move_until(int pin, float dist_min, float dist_max) {
   //straight until we get a signal from any of the pin or reach dist_max
   //if pin -1 wait for ANY front line sensor
-  float mpds = mps / 20.0;
+  float mpds = mps / 10.0;
   float total = 0;
   for (int i = 0; i < (dist_max / mpds); i++) {
     if ((pin == -1 ? get_line_pos() != -2 : digitalRead(pin)) && (total > dist_min)) {
       confirmatory_flash();
       return total;
     }
-    motor(MOTOR_SPEED, MOTOR_SPEED, 0.5);
+    motor(MOTOR_SPEED, MOTOR_SPEED, 1);
     total += mpds;
   }
   return dist_max;
@@ -156,7 +155,7 @@ void confirmatory_flash() {
   }
 }
 int get_line_pos() {
-  //get line position, returns -1 to 1 for single sensor, sensor count for multiple sensors (or split) and -2 for no sensors
+  //get line position, returns -1 to 1 for single sensor, sensor count for multiple sensors and -2 for no sensors
   int results[3];
   for (int l = 0; l < 4; l++) {
     int r = digitalRead(lsense_pins[l]);
@@ -166,9 +165,9 @@ int get_line_pos() {
     //debug leds
     digitalWrite(llights[l], r);
   }
-  if (results[2]&&results[0]) {
+  if (sum(results, 3) == 3) {
     return 3;
-  } else if (sum(results, 3) == 2) {
+  } else if (sum(results, 2) == 2) {
     return 2;
   } else if (results[0]) {
     return -1;
@@ -221,20 +220,77 @@ bool return_back(float distance, int deg, int bias, int follow_time)
   }
   return false;
 }
-void approach_victim(float max_d) {
-  for (int i = 0; i < max_d / (mps / 10); i++) {
-    straight(mps / 10);
-    if (ultrasound() < 10) {
+void approach_victim(float max_d){
+  for (int i=0;i<max_d/(mps/10);i++){
+    straight(mps/10);
+    if (ultrasound()<5){
       break;
     }
-    if (!victim_detect()) {
+    if (!victim_detect()){
       spin(10);
-      if (spin_scan(20, 0.5) == 20) {
+      if (spin_scan(20,0.5)==20){
         break;
       }
     }
   }
 }
+
+void ungrip(int starting_angle)
+{
+  for (int angle = starting_angle; angle >= 1; angle-=5) //command to move from starting_angle to 0
+  {
+    myservo_grab.write(angle); // command to rotate the servo to the specified angle
+    delay(5); 
+  }
+
+  delay(1000); 
+}
+
+void grip(int finishing_angle)
+{
+  for (int angle = 0; angle <= finishing_angle; angle += 1) //command to move from 0 degrees to finishing_degrees
+  {
+    myservo_grab.write(angle);  // command to rotate the servo to the specified angle
+    delay(15); 
+  }
+
+  delay(1000); 
+}
+
+void lift_up(int lift_angle)
+{
+  for (int angle = 0; angle <= lift_angle; angle++) // command to move from 0 degrees to lift_angle
+  {
+    myservo_lift.write(angle); 
+    delay(15); 
+  }
+
+  delay(1000); 
+}
+
+void lift_down(int lift_angle)
+{
+  for (int angle = lift_angle; angle >= 0; angle--)
+  {
+    myservo_lift.write(angle); 
+    delay(15); 
+  }
+
+  delay(1000); 
+}
+
+void pick_robot()
+{
+  grip(90); 
+  lift_up(LIFT_ANGLE); 
+}
+
+void drop_robot()
+{
+  lift_down(LIFT_ANGLE); 
+  ungrip(90);
+}
+
 void setup() {
   Serial.begin(9600);
   AFMS.begin();
@@ -248,11 +304,12 @@ void setup() {
   }
   pinMode(START_SWITCH, INPUT);
   //uncomment when ultrasound ready
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  /*pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);*/
   pinMode(IR_INPUT, INPUT);
   randomSeed(analogRead(IR_INPUT));
 }
+
 
 void loop() {
   while (digitalRead(START_SWITCH)) {
@@ -260,28 +317,32 @@ void loop() {
     delay(100);
     Serial.println(ultrasound());
   }
-
-  follow_line(0, 125 / SLOWDOWN);
-  confirmatory_flash();
-  straight(0.2);
-  spin(90);
-  spin_scan(180, 0.5);
-  prev_distance = 0;
-  approach_victim(1);
-  spin(180);
-  straight(prev_distance*0.9);
-  if (find_line()) {
-    follow_line(-FOLLOW_TURN, 100 / SLOWDOWN);
-    straight(-0.2);
-    spin(-90);
-    spin_until(lsense_pins[1], 180);
-    follow_line(0, 80 / SLOWDOWN);
-    straight(0.2);
-    spin(180);
-    if (find_line()) {
-      follow_line(0, 100 / SLOWDOWN);
-      straight(0.35);
-    }
-
+  if(spin_scan(180,0.5)!=180){
+    Serial.println("AYAAAAAAAAAAAAAA");
+    approach_victim(1);
   }
+  
+//  follow_line(0, 100 / SLOWDOWN);
+//  confirmatory_flash();
+//  straight(0.2);
+//  spin(90);
+//  spin_scan(180, 0.5);
+//  prev_distance = 0;
+//  straight(random(2, 5) * 0.1);
+//  spin(180);
+//  straight(prev_distance);
+//  if (find_line()) {
+//    follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
+//    straight(-0.2);
+//    spin(-90);
+//    spin_until(lsense_pins[1], 180);
+//    follow_line(0, 80 / SLOWDOWN);
+//    straight(0.2);
+//    spin(180);
+//    if (find_line()) {
+//      follow_line(0, 100 / SLOWDOWN);
+//      straight(0.4);
+//    }
+//
+//  }
 }
