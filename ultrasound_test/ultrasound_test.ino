@@ -9,8 +9,8 @@
   Original code improvements to the Ping sketch sourced from Trollmaker.com
   Some code and wiring inspired by http://en.wikiversity.org/wiki/User:Dstaub/robotcar
 */
-#define trigPin 22
-#define echoPin 24
+#define trigPin 13
+#define echoPin 12
 void setup() {
   Serial.begin (9600);
   pinMode(trigPin, OUTPUT);
@@ -24,9 +24,9 @@ void loop() {
   // delayMicroseconds(1000); - Removed this line
   delayMicroseconds(10); // Added this line
   digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
+  duration = pulseIn(echoPin, HIGH, 3000);
   distance = (duration / 2) / 29.1;
-  if (distance >= 200 || distance <= 0) {
+  if (distance >= 50 || distance <= 0) {
     Serial.println("Out of range");
   }
   else {
