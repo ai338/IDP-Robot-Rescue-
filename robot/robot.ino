@@ -1,5 +1,6 @@
 
 #include <Wire.h>
+#include <Servo.h>
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
@@ -20,6 +21,10 @@ const int trigPin = 13; // ultrasound stuff
 const int echoPin = 12; // yeah
 const int IR_INPUT = 7;
 float prev_distance = 0;
+const int LIFT_ANGLE = 15; 
+Servo myservo_grab; 
+Servo myservo_lift; 
+
 
 bool victim_detect() {
   for (int i = 0; i < 10; i++) {
