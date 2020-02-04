@@ -56,17 +56,17 @@ int sum(int arr[], int l) {
   }
   return s;
 }
-void motor(int l, int r, int t) {
+void motor(int l, int r, float t) {
   //set motors running for time t while flashing LED
   left_motor->setSpeed(abs(l));
   right_motor->setSpeed(abs(r));
   left_motor->run(l < 0 ? BACKWARD : FORWARD);
   right_motor->run(r < 0 ? BACKWARD : FORWARD);
-  for (int ds = 0; ds < t; ds++) {
+  for (int hds = 0; hds < t*2; hds++) {
     led_phase++;
-    led_phase %= 10;
-    digitalWrite(LED_BUILTIN, led_phase < 5 ? LOW : HIGH);
-    delay(100);
+    led_phase %= 20;
+    digitalWrite(LED_BUILTIN, led_phase <10 ? LOW : HIGH);
+    delay(50);
   }
   left_motor->setSpeed(0);
   right_motor->setSpeed(0);
@@ -97,14 +97,14 @@ void spin(float deg) {
 }
 float spin_until(int pin, int deg_max) {
   //spin until we get a signal from pin or reach deg_max
-  float dpds = dps / 10;
+  float dpds = dps / 20;
   float total = 0;
   for (int i = 0; i < deg_max / dpds; i++) {
     if (digitalRead(pin)) {
       confirmatory_flash();
       return total;
     }
-    motor(MOTOR_SPEED, -MOTOR_SPEED, 1);
+    motor(MOTOR_SPEED, -MOTOR_SPEED, 0.5);
     total += dpds;
   }
   return deg_max;
@@ -112,7 +112,7 @@ float spin_until(int pin, int deg_max) {
 float spin_scan(int deg_max, float slowdown) {
   //spin slower until we get reading from a victim
   //spin until we get a signal from pin or reach deg_max
-  float dpds = dps / 10 * slowdown;
+  float dpds = dps / 20 * slowdown;
   float total = 0;
   for (int i = 0; i < deg_max / dpds; i++) {
     if (victim_detect()) {
@@ -120,7 +120,7 @@ float spin_scan(int deg_max, float slowdown) {
       spin(-FOV_CORRECTION);
       return total;
     }
-    motor(MOTOR_SPEED * slowdown, -MOTOR_SPEED * slowdown, 1);
+    motor(MOTOR_SPEED * slowdown, -MOTOR_SPEED * slowdown, 0.5);
     total += dpds;
   }
   return deg_max;
@@ -128,14 +128,14 @@ float spin_scan(int deg_max, float slowdown) {
 float move_until(int pin, float dist_min, float dist_max) {
   //straight until we get a signal from any of the pin or reach dist_max
   //if pin -1 wait for ANY front line sensor
-  float mpds = mps / 10.0;
+  float mpds = mps / 20.0;
   float total = 0;
   for (int i = 0; i < (dist_max / mpds); i++) {
     if ((pin == -1 ? get_line_pos() != -2 : digitalRead(pin)) && (total > dist_min)) {
       confirmatory_flash();
       return total;
     }
-    motor(MOTOR_SPEED, MOTOR_SPEED, 1);
+    motor(MOTOR_SPEED, MOTOR_SPEED, 0.5);
     total += mpds;
   }
   return dist_max;
