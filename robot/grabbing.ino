@@ -41,3 +41,14 @@ void lift_down(int lift_angle)
 
   delay(1000); 
 }
+void pick_robot()
+{
+  grip(90); 
+  lift_up(LIFT_ANGLE); 
+}
+
+void drop_robot()
+{
+  lift_down(LIFT_ANGLE); 
+  ungrip(90);
+}

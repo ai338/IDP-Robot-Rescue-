@@ -71,18 +71,6 @@ void confirmatory_flash() {
   delay(10);
 }
 
-void pick_robot()
-{
-  grip(90); 
-  lift_up(LIFT_ANGLE); 
-}
-
-void drop_robot()
-{
-  lift_down(LIFT_ANGLE); 
-  ungrip(90);
-}
-
 void setup() {
   Serial.begin(9600);
   AFMS.begin();
@@ -113,32 +101,27 @@ void loop() {
     }
     Serial.println(ultra);
   }
-  if(spin_scan(180,0.5)!=180){
-    Serial.println("AYAAAAAAAAAAAAAA");
-    approach_victim(1);
+  follow_line(0, 125 / SLOWDOWN);
+  confirmatory_flash();
+  straight(0.2);
+  spin(90);
+  spin_scan(180, 0.5);
+  prev_distance = 0;
+  straight(random(2, 5) * 0.1);
+  spin(180);
+  straight(prev_distance);
+  if (find_line()) {
+    follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
+    straight(-0.2);
+    spin(-90);
+    spin_until(lsense_pins[1], 180);
+    follow_line(0, 80 / SLOWDOWN);
+    straight(0.2);
+    spin(180);
+    if (find_line()) {
+      follow_line(0, 100 / SLOWDOWN);
+      straight(0.35);
+    }
+
   }
-  
-//  follow_line(0, 100 / SLOWDOWN);
-//  confirmatory_flash();
-//  straight(0.2);
-//  spin(90);
-//  spin_scan(180, 0.5);
-//  prev_distance = 0;
-//  straight(random(2, 5) * 0.1);
-//  spin(180);
-//  straight(prev_distance);
-//  if (find_line()) {
-//    follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
-//    straight(-0.2);
-//    spin(-90);
-//    spin_until(lsense_pins[1], 180);
-//    follow_line(0, 80 / SLOWDOWN);
-//    straight(0.2);
-//    spin(180);
-//    if (find_line()) {
-//      follow_line(0, 100 / SLOWDOWN);
-//      straight(0.4);
-//    }
-//
-//  }
 }
