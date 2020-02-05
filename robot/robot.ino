@@ -102,26 +102,31 @@ void loop() {
     Serial.println(ultra);
   }
   follow_line(0, 125 / SLOWDOWN);
-  confirmatory_flash();
-  straight(0.2);
-  spin(90);
-  spin_scan(180, 0.5);
-  prev_distance = 0;
-  straight(random(2, 5) * 0.1);
-  spin(180);
-  straight(prev_distance);
-  if (find_line()) {
-    follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
-    straight(-0.2);
-    spin(-90);
-    spin_until(lsense_pins[1], 180);
-    follow_line(0, 80 / SLOWDOWN);
+  for (int i=0; i<4; i++){
+    confirmatory_flash();
     straight(0.2);
-    spin(180);
-    if (find_line()) {
-      follow_line(0, 100 / SLOWDOWN);
-      straight(0.35);
+    spin(90);
+    bool scan_success=spin_scan(180, 0.5)!=180;
+    if (scan_success){
+      prev_distance = 0;
+      approach_victim(2);
+      //grab
+      spin(180);
+      straight(prev_distance);
+    }else{
+      if (find_line()) {
+        follow_line(0, 100 / SLOWDOWN);
+        straight(0.35);
+      }
+      break;
     }
-
+    if (find_line()) {
+      follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
+      //drop
+      straight(-0.2);
+      spin(-90);
+      spin_until(lsense_pins[1], 180);
+      follow_line(0, 80 / SLOWDOWN);
+    }
   }
 }
