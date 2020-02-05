@@ -42,7 +42,7 @@ float ultrasound() {
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
+  duration = pulseIn(echoPin, HIGH, 3000);
   distance = (duration / 2) / 29.1;
   if (distance >= 200 || distance <= 0) {
     Serial.println("Out of range");
@@ -304,24 +304,27 @@ void setup() {
   }
   pinMode(START_SWITCH, INPUT);
   //uncomment when ultrasound ready
-  /*pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);*/
   pinMode(IR_INPUT, INPUT);
   randomSeed(analogRead(IR_INPUT));
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
 }
 
 
 void loop() {
   while (digitalRead(START_SWITCH)) {
-    get_line_pos();
-    delay(100);
+    //get_line_pos();
+    //delay(100);
     Serial.println(ultrasound());
+    
   }
   if(spin_scan(180,0.5)!=180){
     Serial.println("AYAAAAAAAAAAAAAA");
     approach_victim(1);
   }
-  
+
+
+
 //  follow_line(0, 100 / SLOWDOWN);
 //  confirmatory_flash();
 //  straight(0.2);
