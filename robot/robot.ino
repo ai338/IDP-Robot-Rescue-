@@ -19,6 +19,7 @@ int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 13; // ultrasound stuff
 const int echoPin = 12; // yeah
 const int IR_INPUT = 7;
+const int IR_DISTANCE = A4;
 float prev_distance = 0;
 const int LIFT_ANGLE = 15; 
 Servo myservo_grab; 
@@ -84,9 +85,10 @@ void setup() {
   }
   pinMode(START_SWITCH, INPUT);
   //uncomment when ultrasound ready
-  /*pinMode(trigPin, OUTPUT);
-    pinMode(echoPin, INPUT);*/
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
   pinMode(IR_INPUT, INPUT);
+  pinMode(IR_DISTANCE, INPUT);
   randomSeed(analogRead(IR_INPUT));
 }
 
@@ -109,7 +111,7 @@ void loop() {
     bool scan_success=spin_scan(180, 0.5)!=180;
     if (scan_success&&i!=4){
       prev_distance = 0;
-      approach_victim(2);
+      approach_victim(2,500);
       //grab
       spin(180);
       straight(prev_distance);

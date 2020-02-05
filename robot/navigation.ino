@@ -64,10 +64,10 @@ bool return_back(float distance, int deg, int bias, int follow_time)
   }
   return false;
 }
-void approach_victim(float max_d){
+void approach_victim(float max_d, int ir_target){
   for (int i=0;i<max_d/(mps/10);i++){
     straight(mps/10);
-    if (ultrasound()<5){
+    if (analogRead(IR_DISTANCE)>ir_target){
       break;
     }
     if (!victim_detect()){
