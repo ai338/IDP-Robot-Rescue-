@@ -102,12 +102,12 @@ void loop() {
     Serial.println(ultra);
   }
   follow_line(0, 125 / SLOWDOWN);
-  for (int i=0; i<4; i++){
+  for (int i=0; i<5; i++){
     confirmatory_flash();
     straight(0.2);
     spin(90);
     bool scan_success=spin_scan(180, 0.5)!=180;
-    if (scan_success){
+    if (scan_success&&i!=4){
       prev_distance = 0;
       approach_victim(2);
       //grab
