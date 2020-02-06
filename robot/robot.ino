@@ -106,14 +106,18 @@ void loop() {
     straight(0.15);
     drop_robot();
     spin(120);
-    bool scan_success=spin_scan(270, 0.45)!=270;
-    if (scan_success&&i!=4){
+    bool scan_success=i!=4 && spin_scan(270, 0.45)!=270;
+    if (scan_success){
       prev_distance = 0;
-      approach_victim(2,0);
-      pick_robot();
+      if (approach_victim(2,0)){
+        pick_robot();
+      }else{
+        scan_success=false;
+        //try and return home at this point?
+      }
       spin(180);
       straight(prev_distance);
-    }else{
+    }if (!scan_success){
       //return home :D
       pick_robot();
       if (find_line()) {

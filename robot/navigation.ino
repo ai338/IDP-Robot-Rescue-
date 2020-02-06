@@ -45,6 +45,7 @@ void follow_line(int bias, int follow_time) {
 
 bool find_line()
 {
+  //find line from cave entrance, hopefully ignoring the T
   if (spin_until(lsense_pins[3], 360) != 360) {
     spin(180);
     if (move_until(-1, 0.12, 0.36) != 0.36) {
@@ -53,20 +54,8 @@ bool find_line()
   }
   return false;
 }
-
-bool return_back(float distance, int deg, int bias, int follow_time)
-{
-  spin(180);
-  straight(prev_distance);
-  spin(deg);
-
-  if (find_line()) {
-    follow_line(bias, follow_time);
-    return true;
-  }
-  return false;
-}
 bool approach_victim(float max_d, int ir_target){
+  //approach a target, returns true if successful
   for (int i=0;i<max_d/(mps/10);i++){
     straight(mps/10);
     if (ir_target==0? ultrasound()<=10:analogRead(IR_DISTANCE)>ir_target){
