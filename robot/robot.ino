@@ -21,9 +21,9 @@ const int echoPin = 12; // yeah
 const int IR_INPUT = 7;
 const int IR_DISTANCE = A5;
 float prev_distance = 0;
-const int LIFT_ANGLE = 15; 
-Servo grabber; 
-Servo lifter; 
+const int LIFT_ANGLE = 15;
+Servo grabber;
+Servo lifter;
 
 
 bool victim_detect() {
@@ -42,7 +42,7 @@ float ultrasound() {
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
+  duration = pulseIn(echoPin, HIGH, 3000);
   distance = (duration / 2) / 29.1;
   if (distance >= 200 || distance <= 0) {
     Serial.println("Out of range");
@@ -84,7 +84,6 @@ void setup() {
     pinMode(llights[l], OUTPUT);
   }
   pinMode(START_SWITCH, INPUT);
-  //uncomment when ultrasound ready
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
   pinMode(IR_INPUT, INPUT);
