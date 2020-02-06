@@ -14,6 +14,6 @@ void pick_robot()
 
 void drop_robot()
 {
-  actuate_servo(grabber, 0);
   actuate_servo(lifter, 150);
+  actuate_servo(grabber, 0);
 }

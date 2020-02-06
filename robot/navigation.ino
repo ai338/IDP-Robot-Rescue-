@@ -7,11 +7,13 @@ int get_line_pos() {
       results[l] = r;
     }
     //debug leds
-    digitalWrite(llights[l], r);
+    if (l<3){
+      digitalWrite(llights[l], r);
+    }
   }
   if (sum(results, 3) == 3) {
     return 3;
-  } else if (sum(results, 2) == 2) {
+  } else if (sum(results, 3) == 2) {
     return 2;
   } else if (results[0]) {
     return -1;
@@ -64,17 +66,18 @@ bool return_back(float distance, int deg, int bias, int follow_time)
   }
   return false;
 }
-void approach_victim(float max_d, int ir_target){
+bool approach_victim(float max_d, int ir_target){
   for (int i=0;i<max_d/(mps/10);i++){
     straight(mps/10);
     if (ir_target==0? ultrasound()<=10:analogRead(IR_DISTANCE)>ir_target){
-      break;
+      return true;
     }
     if (!victim_detect()){
-      spin(10);
-      if (spin_scan(20,0.5)==20){
-        break;
+      spin(15);
+      if (spin_scan(30,0.25)==30){
+        return false;
       }
     }
   }
+  return false;
 }
