@@ -19,11 +19,11 @@ int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 13; // ultrasound stuff
 const int echoPin = 12; // yeah
 const int IR_INPUT = 7;
-const int IR_DISTANCE = A4;
+const int IR_DISTANCE = A5;
 float prev_distance = 0;
 const int LIFT_ANGLE = 15; 
-Servo myservo_grab; 
-Servo myservo_lift; 
+Servo grabber; 
+Servo lifter; 
 
 
 bool victim_detect() {
@@ -89,42 +89,40 @@ void setup() {
   pinMode(echoPin, INPUT);
   pinMode(IR_INPUT, INPUT);
   pinMode(IR_DISTANCE, INPUT);
-  randomSeed(analogRead(IR_INPUT));
+  grabber.attach(10);
+  lifter.attach(9);
+  drop_robot();
 }
 
 
 void loop() {
   while (digitalRead(START_SWITCH)) {
     get_line_pos();
+    Serial.println(analogRead(IR_DISTANCE));
     delay(100);
-    float ultra = ultrasound();
-    if (ultra==-1){
-      confirmatory_flash();
-    }
-    Serial.println(ultra);
   }
   follow_line(0, 125 / SLOWDOWN);
   for (int i=0; i<5; i++){
     confirmatory_flash();
-    straight(0.2);
+    straight(0.1);
     spin(90);
     bool scan_success=spin_scan(180, 0.5)!=180;
     if (scan_success&&i!=4){
       prev_distance = 0;
-      approach_victim(2,500);
-      //grab
+      approach_victim(2,0);
+      pick_robot();
       spin(180);
       straight(prev_distance);
     }else{
       if (find_line()) {
         follow_line(0, 100 / SLOWDOWN);
-        straight(0.35);
+        straight(0.25);
       }
       break;
     }
     if (find_line()) {
-      follow_line(-FOLLOW_TURN / 2, 100 / SLOWDOWN);
-      //drop
+      follow_line(-FOLLOW_TURN, 100 / SLOWDOWN);
+      drop_robot();
       straight(-0.2);
       spin(-90);
       spin_until(lsense_pins[1], 180);

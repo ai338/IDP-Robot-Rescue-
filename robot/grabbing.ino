@@ -1,54 +1,19 @@
-void ungrip(int starting_angle)
-{
-  for (int angle = starting_angle; angle >= 1; angle-=5) //command to move from starting_angle to 0
-  {
-    myservo_grab.write(angle); // command to rotate the servo to the specified angle
-    delay(5); 
+void actuate_servo(Servo servo, int target_angle){
+  int start_angle = servo.read();
+  int sign=target_angle>start_angle?1:-1;
+  for (int a = start_angle; a!=target_angle; a+=sign){
+    servo.write(a);
+    delay(5);
   }
-
-  delay(1000); 
-}
-
-void grip(int finishing_angle)
-{
-  for (int angle = 0; angle <= finishing_angle; angle += 1) //command to move from 0 degrees to finishing_degrees
-  {
-    myservo_grab.write(angle);  // command to rotate the servo to the specified angle
-    delay(15); 
-  }
-
-  delay(1000); 
-}
-
-void lift_up(int lift_angle)
-{
-  for (int angle = 0; angle <= lift_angle; angle++) // command to move from 0 degrees to lift_angle
-  {
-    myservo_lift.write(angle); 
-    delay(15); 
-  }
-
-  delay(1000); 
-}
-
-void lift_down(int lift_angle)
-{
-  for (int angle = lift_angle; angle >= 0; angle--)
-  {
-    myservo_lift.write(angle); 
-    delay(15); 
-  }
-
-  delay(1000); 
 }
 void pick_robot()
 {
-  grip(90); 
-  lift_up(LIFT_ANGLE); 
+  actuate_servo(grabber, 95);
+  actuate_servo(lifter, 90);
 }
 
 void drop_robot()
 {
-  lift_down(LIFT_ANGLE); 
-  ungrip(90);
+  actuate_servo(grabber, 0);
+  actuate_servo(lifter, 150);
 }
