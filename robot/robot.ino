@@ -14,7 +14,7 @@ const int FOLLOW_TURN = MOTOR_SPEED*1.5; //default turning power subtracted from
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
 const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
 const int START_SWITCH = 6; // switch to start robot
-const int FOV_CORRECTION=3;
+const int FOV_CORRECTION=2;
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 13; // ultrasound stuff
 const int echoPin = 12; // yeah
@@ -22,12 +22,13 @@ const int IR_INPUT = 7;
 const int IR_DISTANCE = A5;
 float prev_distance = 0;
 const int LIFT_ANGLE = 15;
+unsigned long start_time;
 Servo grabber;
 Servo lifter;
 
 
 bool victim_detect() {
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 20; i++) {
     if (!digitalRead(IR_INPUT)) {
       return true;
     }
@@ -100,16 +101,20 @@ void loop() {
     Serial.println(analogRead(IR_DISTANCE));
     delay(100);
   }
-  follow_line(0, 125 / SLOWDOWN);
+  start_time=millis();
+  follow_line(0, 120 / SLOWDOWN);
   for (int i=0; i<5; i++){
     confirmatory_flash();
     straight(0.15);
     drop_robot();
     spin(120);
-    bool scan_success=i!=4 && spin_scan(270, 0.45)!=270;
+    bool scan_success=i!=4 && millis()-start_time<4*60*1000 && spin_scan(270, 0.45)!=270;
     if (scan_success){
       prev_distance = 0;
       if (approach_victim(2,0)){
+        digitalWrite(llights[3],HIGH);
+        delay(1000);
+        digitalWrite(llights[3],LOW);
         pick_robot();
       }else{
         scan_success=false;
@@ -122,7 +127,7 @@ void loop() {
       pick_robot();
       if (find_line()) {
         follow_line(0, 100 / SLOWDOWN);
-        straight(0.22);
+        straight(0.2);
       }
       break;
     }

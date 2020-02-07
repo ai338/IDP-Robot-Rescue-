@@ -25,19 +25,19 @@ int get_line_pos() {
   return -2;
 }
 void follow_line(int bias, int follow_time) {
-  //follow line with turning bias when multiple sensors for follow_timex100ms, and then stops following at T or at 3*follow_time
-  for (int t = 0; t < follow_time * 3; t++) {
+  //follow line with turning bias when multiple sensors for follow_time seconds, and then stops following at T
+  for (int t = 0; true; t++) {
     int result = get_line_pos();
     if (result > 1) {
-      if (result == 3 && t > follow_time) {
+      if (result == 3 && t > follow_time*2) {
         break;
       }
-      turn(bias, 1);
+      turn(bias, 0.05);
       last_result = bias;
     } else if (result == -2) {
-      turn(last_result, 1);
+      turn(last_result, 0.05);
     } else {
-      turn(FOLLOW_TURN * -result, 1);
+      turn(FOLLOW_TURN * -result, 0.05);
       last_result = FOLLOW_TURN * -result;
     }
   }

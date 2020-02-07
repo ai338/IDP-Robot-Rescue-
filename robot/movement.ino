@@ -15,7 +15,7 @@ void motor(int l, int r, float t) {
     led_phase++;
     led_phase %= 20;
     digitalWrite(llights[3], led_phase < 10 ? LOW : HIGH);
-    delay(100);
+    delay(50);
   }
   left_motor->setSpeed(0);
   right_motor->setSpeed(0);
