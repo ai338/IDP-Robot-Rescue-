@@ -101,7 +101,10 @@ void setup() {
 void loop() {
   while (digitalRead(START_SWITCH)) {
     get_line_pos();
-    Serial.println(ultrasound());
+    delay(100);
+    if(ultrasound()==999){
+      confirmatory_flash();
+    }
     delay(100);
   }
   start_time=millis();
