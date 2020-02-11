@@ -14,8 +14,9 @@ const int FOLLOW_TURN = MOTOR_SPEED*1.5; //default turning power subtracted from
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
 const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
 const int START_SWITCH = 6; // switch to start robot
-const int FOV_CORRECTION=2
-;
+const int FOV_CORRECTION=2;
+const int ULTRA_FOV=8;
+const int ULTRA_SCAN=60;
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 13; // ultrasound stuff
 const int echoPin = 12; // yeah
@@ -23,6 +24,7 @@ const int IR_INPUT = 7;
 const int IR_DISTANCE = A5;
 float prev_distance = 0;
 const int LIFT_ANGLE = 15;
+bool ultra_scan=false;
 unsigned long start_time;
 Servo grabber;
 Servo lifter;
@@ -44,7 +46,7 @@ float ultrasound() {
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH, 3000);
+  duration = pulseIn(echoPin, HIGH, 4000);
   distance = (duration / 2) / 29.1;
   if (distance >= 200 || distance <= 0) {
     Serial.println("Out of range");
@@ -99,20 +101,27 @@ void setup() {
 void loop() {
   while (digitalRead(START_SWITCH)) {
     get_line_pos();
-    Serial.println(analogRead(IR_DISTANCE));
+    Serial.println(ultrasound());
     delay(100);
   }
   start_time=millis();
   follow_line(0, 120 / SLOWDOWN);
+  ultra_scan=false;
   for (int i=0; i<5; i++){
     confirmatory_flash();
     straight(0.15);
     drop_robot();
     spin(120);
-    bool scan_success=i!=4 && millis()-start_time<4*60*1000 && spin_scan(270, 0.45)!=270;
+    bool auto_return=i==4 || millis()-start_time>4*60*1000;
+    bool scan_success=!auto_return && spin_scan(270, 0.45, false)!=270;
+    if (!scan_success && !auto_return){
+      ultra_scan=true;
+      spin(270);
+      scan_success=spin_scan(270, 0.45, true)!=270;
+    }
     if (scan_success){
       prev_distance = 0;
-      if (approach_victim(2,0)){
+      if (approach_victim(2,0,ultra_scan)){
         digitalWrite(llights[3],HIGH);
         delay(1000);
         digitalWrite(llights[3],LOW);

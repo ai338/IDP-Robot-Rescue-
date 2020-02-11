@@ -54,16 +54,16 @@ bool find_line()
   }
   return false;
 }
-bool approach_victim(float max_d, int ir_target){
+bool approach_victim(float max_d, int ir_target, bool use_ultra){
   //approach a target, returns true if successful
   for (int i=0;i<max_d/(mps/10);i++){
     straight(mps/10);
     if (ir_target==0? ultrasound()<=10:analogRead(IR_DISTANCE)>ir_target){
       return true;
     }
-    if (!victim_detect()){
+    if (use_ultra?ultrasound()<ULTRA_SCAN:!victim_detect()){
       spin(15);
-      if (spin_scan(30,0.25)==30){
+      if (spin_scan(30,0.25,use_ultra)==30){
         return false;
       }
     }
