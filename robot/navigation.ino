@@ -7,7 +7,7 @@ int get_line_pos() {
       results[l] = r;
     }
     //debug leds
-    if (l<3){
+    if (l < 3) {
       digitalWrite(llights[l], r);
     }
   }
@@ -29,7 +29,7 @@ void follow_line(int bias, int follow_time) {
   for (int t = 0; true; t++) {
     int result = get_line_pos();
     if (result > 1) {
-      if (result == 3 && t > follow_time*2) {
+      if (result == 3 && t > follow_time * 2) {
         break;
       }
       turn(bias, 0.05);
@@ -54,18 +54,27 @@ bool find_line()
   }
   return false;
 }
-bool approach_victim(float max_d, int ir_target, bool use_ultra){
+bool approach_victim(float max_d, bool use_ultra) {
   //approach a target, returns true if successful
-  for (int i=0;i<max_d/(mps/10);i++){
-    straight(mps/10);
-    if (ir_target==0? ultrasound()<=10:analogRead(IR_DISTANCE)>ir_target){
+  float last_u = ULTRA_SCAN;
+  for (int i = 0; i < max_d / (mps / 10); i++) {
+    straight(mps / 10);
+    float u = ultrasound();
+    if (u <= 10) {
       return true;
     }
-    if (use_ultra?ultrasound()<ULTRA_SCAN:!victim_detect()){
-      spin(15);
-      if (spin_scan(30,0.25,use_ultra)==30){
+    if (i % 5 == 3 && (use_ultra ? u > last_u : !victim_detect())) {
+      spin(12);
+      if (spin_scan(30, 0.25, use_ultra) == 30 || (use_ultra && (last_u + 5 < ultrasound()))) {
+        spin(-12);
         return false;
       }
+    }
+    if (use_ultra && victim_detect()) {
+      use_ultra = false;
+    } else if (use_ultra) {
+      float u = ultrasound();
+      last_u = u != 999 ? u : last_u;
     }
   }
   return false;

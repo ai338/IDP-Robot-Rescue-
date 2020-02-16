@@ -15,8 +15,8 @@ const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
 const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
 const int START_SWITCH = 6; // switch to start robot
 const int FOV_CORRECTION=2;
-const int ULTRA_FOV=8;
-const int ULTRA_SCAN=60;
+const int ULTRA_FOV=7;
+const int ULTRA_SCAN=50;
 int last_result = 0; //keep track of last turn to return robot to line
 const int trigPin = 13; // ultrasound stuff
 const int echoPin = 12; // yeah
@@ -101,27 +101,30 @@ void setup() {
 void loop() {
   while (digitalRead(START_SWITCH)) {
     get_line_pos();
-    Serial.println(ultrasound());
     delay(100);
+    if (ultrasound()==999){
+      confirmatory_flash();
+      delay(100);
+    }
   }
   start_time=millis();
   follow_line(0, 120 / SLOWDOWN);
-  ultra_scan=false;
   for (int i=0; i<5; i++){
+    ultra_scan=false;
     confirmatory_flash();
-    straight(0.15);
+    straight(0.12);
     drop_robot();
-    spin(120);
+    spin(130);
     bool auto_return=i==4 || millis()-start_time>4*60*1000;
     bool scan_success=!auto_return && spin_scan(270, 0.45, false)!=270;
     if (!scan_success && !auto_return){
       ultra_scan=true;
-      spin(270);
+      spin(260);
       scan_success=spin_scan(270, 0.45, true)!=270;
     }
     if (scan_success){
       prev_distance = 0;
-      if (approach_victim(2,0,ultra_scan)){
+      if (approach_victim(2,ultra_scan)){
         digitalWrite(llights[3],HIGH);
         delay(1000);
         digitalWrite(llights[3],LOW);
@@ -131,7 +134,7 @@ void loop() {
         //try and return home at this point?
       }
       spin(180);
-      straight(prev_distance);
+      straight(prev_distance*1.05);
     }if (!scan_success){
       //return home :D
       pick_robot();

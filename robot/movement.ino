@@ -58,13 +58,10 @@ float spin_scan(int deg_max, float slowdown, bool use_ultra) {
   //spin until we get a signal from pin or reach deg_max
   float dpds = dps / 20 * slowdown;
   float total = 0;
-  float last_ultra=ULTRA_SCAN;
   for (int i = 0; i < deg_max / dpds; i++) {
-    float u=ultrasound();
-    if (use_ultra?u<last_ultra+1:victim_detect()) {
+    if (use_ultra?ultrasound()<ULTRA_SCAN:victim_detect()) {
       confirmatory_flash();
       spin(use_ultra?-ULTRA_FOV:-FOV_CORRECTION);
-      last_ultra=u;
       return total;
     }
     motor(MOTOR_SPEED * slowdown, -MOTOR_SPEED * slowdown, 0.05);
