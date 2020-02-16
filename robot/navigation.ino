@@ -6,7 +6,7 @@ int get_line_pos() {
     if (l < 3) {
       results[l] = r;
     }
-    //debug leds
+    //set debug leds
     if (l < 3) {
       digitalWrite(llights[l], r);
     }
@@ -25,7 +25,7 @@ int get_line_pos() {
   return -2;
 }
 void follow_line(int bias, int follow_time) {
-  //follow line with turning bias when multiple sensors for follow_time seconds, and then stops following at T
+  //follow line with turning bias when multiple sensors for follow_time seconds, and then stops following at T-junction after follow_time seconds
   for (int t = 0; true; t++) {
     int result = get_line_pos();
     if (result > 1) {
@@ -61,20 +61,25 @@ bool approach_victim(float max_d, bool use_ultra) {
     straight(mps / 10);
     float u = ultrasound();
     if (u <= 10) {
+      //in grab range
       return true;
     }
     if (i % 5 == 3 && (use_ultra ? u > last_u : !victim_detect())) {
+      //victim signal lost, readjust
       spin(12);
       if (spin_scan(30, 0.25, use_ultra) == 30 || (use_ultra && (last_u + 5 < ultrasound()))) {
+        //failed :(
         spin(-12);
         return false;
       }
     }
     if (use_ultra && victim_detect()) {
+      //use IR if we get IR
       use_ultra = false;
     } else if (use_ultra) {
       float u = ultrasound();
       last_u = u != 999 ? u : last_u;
+      //last_u used to (hopefully) avoid trying to grab walls
     }
   }
   return false;

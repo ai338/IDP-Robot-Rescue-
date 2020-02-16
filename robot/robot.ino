@@ -12,18 +12,17 @@ const float dps = 67 * SLOWDOWN; // degrees per second motor time
 int led_phase = 0; //keep track of LED state
 const int FOLLOW_TURN = MOTOR_SPEED*1.5; //default turning power subtracted from inside wheel
 const int lsense_pins[4] = {A1, A2, A3, A0}; //line sensor pins
-const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor
+const int llights[4] = {3, 4, 5, 2}; //debug LEDs for line sensor, llights[3] is now amber movement LED
 const int START_SWITCH = 6; // switch to start robot
-const int FOV_CORRECTION=2;
-const int ULTRA_FOV=7;
-const int ULTRA_SCAN=50;
-int last_result = 0; //keep track of last turn to return robot to line
-const int trigPin = 13; // ultrasound stuff
-const int echoPin = 12; // yeah
-const int IR_INPUT = 7;
-const int IR_DISTANCE = A5;
-float prev_distance = 0;
-const int LIFT_ANGLE = 15;
+const int FOV_CORRECTION=2; // field of view correction to point directly at victim
+const int ULTRA_FOV=7; // same as above but for ultrasound
+const int ULTRA_SCAN=50; // max dist for ultrasound detection
+int last_result = 0; //keep track of last turn to return robot to line (unused?)
+const int trigPin = 13; // ultrasound trigger pin
+const int echoPin = 12; // ultrasound echo pin
+const int IR_INPUT = 7; // digital feed from IR sensor
+const int IR_DISTANCE = A5; // IR distance sensor pin (unused)
+float prev_distance = 0; // cumulative counter for straight() calls 
 bool ultra_scan=false;
 unsigned long start_time;
 Servo grabber;
@@ -31,6 +30,7 @@ Servo lifter;
 
 
 bool victim_detect() {
+  //monitor IR pin for any low signal over 2ms (as input could be square wave)
   for (int i = 0; i < 20; i++) {
     if (!digitalRead(IR_INPUT)) {
       return true;
@@ -40,6 +40,7 @@ bool victim_detect() {
   return false;
 }
 float ultrasound() {
+  // read ultrasound sensor, should give up at ~60cm for faster readings
   float duration, distance;
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
@@ -65,7 +66,7 @@ int sum(int arr[], int l) {
   return s;
 }
 void confirmatory_flash() {
-  //debug purposes only
+  //flash all line_following LEDs briefly
   for (int i = 0; i < 3; i++) {
     digitalWrite(llights[i], HIGH);
   }
@@ -79,8 +80,6 @@ void confirmatory_flash() {
 void setup() {
   Serial.begin(9600);
   AFMS.begin();
-  // change to actual LED at some point :P
-  pinMode(LED_BUILTIN, OUTPUT);
   for (int l = 0; l < 4; l++) {
     pinMode(lsense_pins[l], INPUT);
   }
@@ -94,30 +93,39 @@ void setup() {
   pinMode(IR_DISTANCE, INPUT);
   grabber.attach(10);
   lifter.attach(9);
+  //reset grabber
   pick_robot();
 }
 
 
 void loop() {
+  // wait for switch
   while (digitalRead(START_SWITCH)) {
+    //read line pos to update debug LEDs
     get_line_pos();
     delay(100);
     if (ultrasound()==999){
+      //flash if ultrasound out of range
       confirmatory_flash();
       delay(100);
     }
   }
   start_time=millis();
+  //enter cave
   follow_line(0, 120 / SLOWDOWN);
   for (int i=0; i<5; i++){
     ultra_scan=false;
     confirmatory_flash();
+    //get to optimum scanning position
     straight(0.12);
     drop_robot();
+    //prepare the claw
     spin(130);
-    bool auto_return=i==4 || millis()-start_time>4*60*1000;
+    //reset if 4 pickup attempts or 4 minutes passed
+    bool auto_return=i==4 || millis()-start_time>4*60*1000.0;
     bool scan_success=!auto_return && spin_scan(270, 0.45, false)!=270;
     if (!scan_success && !auto_return){
+      //IR failed, try ultrasound
       ultra_scan=true;
       spin(260);
       scan_success=spin_scan(270, 0.45, true)!=270;
@@ -125,6 +133,7 @@ void loop() {
     if (scan_success){
       prev_distance = 0;
       if (approach_victim(2,ultra_scan)){
+        //flash LED before pickup
         digitalWrite(llights[3],HIGH);
         delay(1000);
         digitalWrite(llights[3],LOW);
@@ -134,7 +143,7 @@ void loop() {
         //try and return home at this point?
       }
       spin(180);
-      straight(prev_distance*1.05);
+      straight(prev_distance*1.05); //fudge factor to get closer to T
     }if (!scan_success){
       //return home :D
       pick_robot();
@@ -145,14 +154,18 @@ void loop() {
       break;
     }
     if (find_line()) {
+      //go to triage area
       follow_line(-MOTOR_SPEED, 100 / SLOWDOWN);
       drop_robot();
       straight(-0.2);
       spin(-90);
+      //reacquire line
       spin_until(lsense_pins[1], 180);
+      //retract claw to avoid tunnel collisions
       pick_robot();
       follow_line(0, 80 / SLOWDOWN);
     }else{
+      //we couldn't find the line, give up
       break;
     }
   }

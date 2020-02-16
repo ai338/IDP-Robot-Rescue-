@@ -1,27 +1,28 @@
 void motor(int l, int r, float t) {
   //set motors running for time t (in seconds) while flashing LED
-  if (t<0.05){
+  if (t < 0.05) {
     //for small t change motor speed
-    float speedchange=t/0.05;
-    l*=speedchange;
-    r*=speedchange;
-    t=0.05;
+    float speedchange = t / 0.05;
+    l *= speedchange;
+    r *= speedchange;
+    t = 0.05;
   }
   left_motor->setSpeed(abs(l));
   right_motor->setSpeed(abs(r));
   left_motor->run(l < 0 ? BACKWARD : FORWARD);
   right_motor->run(r < 0 ? BACKWARD : FORWARD);
-  for (int hds = 0; hds < t*20; hds++) {
+  for (int hds = 0; hds < t * 20; hds++) {
+    //update LED
     led_phase++;
     led_phase %= 20;
-    digitalWrite(llights[3], led_phase%10 < 5 ? LOW : HIGH);
+    digitalWrite(llights[3], led_phase % 10 < 5 ? LOW : HIGH);
     delay(50);
   }
   left_motor->setSpeed(0);
   right_motor->setSpeed(0);
 }
 void turn(int bias, float t) {
-  //turn robot with one wheel turning at speed MOTOR_SPEED-|bias|
+  //turn robot with one wheel turning at speed MOTOR_SPEED - |bias|
   if (bias < 0) {
     motor(MOTOR_SPEED + bias, MOTOR_SPEED, t);
   } else {
@@ -55,13 +56,12 @@ float spin_until(int pin, int deg_max) {
 }
 float spin_scan(int deg_max, float slowdown, bool use_ultra) {
   //spin slower until we get reading from a victim
-  //spin until we get a signal from pin or reach deg_max
   float dpds = dps / 20 * slowdown;
   float total = 0;
   for (int i = 0; i < deg_max / dpds; i++) {
-    if (use_ultra?ultrasound()<ULTRA_SCAN:victim_detect()) {
+    if (use_ultra ? ultrasound() < ULTRA_SCAN : victim_detect()) {
       confirmatory_flash();
-      spin(use_ultra?-ULTRA_FOV:-FOV_CORRECTION);
+      spin(use_ultra ? -ULTRA_FOV : -FOV_CORRECTION);
       return total;
     }
     motor(MOTOR_SPEED * slowdown, -MOTOR_SPEED * slowdown, 0.05);
